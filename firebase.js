@@ -18,8 +18,14 @@ firebase.initializeApp(firebaseConfig);
 window.firebaseAuth = firebase.auth();
 window.firebaseDb = firebase.database();
 
-// Connexion anonyme du joueur
-window.firebaseAuth.signInAnonymously()
+
+// Services Firebase
+window.firebaseAuth = firebase.auth();
+window.firebaseDb = firebase.database();
+
+// Une seule connexion anonyme
+window.firebaseReady = window.firebaseAuth
+  .signInAnonymously()
   .then((result) => {
     window.currentPlayer = result.user;
 
@@ -27,12 +33,10 @@ window.firebaseAuth.signInAnonymously()
       "XIDATA STRATEGIE connecté !",
       result.user.uid
     );
+
+    return result.user;
   })
   .catch((error) => {
     console.error("Erreur Firebase :", error.message);
-  });
-window.firebaseReady = window.firebaseAuth.signInAnonymously()
-  .then(result => {
-    window.currentPlayer = result.user;
-    return result.user;
+    throw error;
   });
