@@ -101,7 +101,7 @@ joinRoomBtn.addEventListener("click", async () => {
       if (
         room === null ||
         room.status !== "waiting" ||
-        room.guest !== null && room.guest !== undefined
+        room.guest !== null
         room.host === user.uid
       ) {
         return;
