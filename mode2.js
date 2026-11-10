@@ -23,12 +23,7 @@
 $('#customHint').textContent = bonusPending !== null
   ? `BONUS OBLIGATOIRE : choisissez un pion des ${name(bonusPending)} à retirer.`
   : phase === 'placement'
-    ? `Pions à placer — Blancs : ${12-board.filter(x=>x===W).length} · Noirs : ${12-board.filter(x=>x===B).length}`
-    : 'Sélectionnez un pion puis une destination verte. Les captures sont en jaune.';
-
-  
-  
-
+    ? `Pions à placer — Blancs : ${12-board.filter(x=>x===W).length} · Noirs : ${12-board.filter(x=>x===B).length}`: 'Sélectionnez un pion puis une destination verte. Les captures sont en jaune.';
 function play(m) {
   const p = turn;
   const e = other(p);
@@ -37,24 +32,20 @@ function play(m) {
     if (m.to !== center) return;
     openingMovePending = false;
   }
-
   board[m.to] = p;
   board[m.from] = E;
   lastMove = m.to;
   selected = null;
-
   if (m.cap !== null) {
     board[m.cap] = E;
     captures[p]++;
     chain = m.to;
-
     const remaining = board.filter(x => x === e).length;
 
     if (remaining === 0) {
       finish(p, `${name(p)} gagnent : tous les pions adverses sont capturés.`);
       return;
     }
-
     if (remaining >= 2) {
       bonusPending = e;
       say(`Bonus obligatoire : choisissez un pion des ${name(e)} à retirer.`);
@@ -77,13 +68,10 @@ function play(m) {
   }
   finishTurn(p, e, 'Déplacement effectué.');
 }
-
-
 function finishTurn(p, next, msg) {
   chain = null;
   selected = null;
   $('#chainPanel')?.classList.add('hidden');
-
   if (board.filter(x => x === next).length === 0) {
     finish(p, `${name(p)} gagnent : tous les pions adverses sont capturés.`);
     return;
@@ -101,13 +89,8 @@ function finishTurn(p, next, msg) {
 
   if (aiMode && turn === B) scheduleAI();
 }
-
-
-  
   function finish(p,msg){gameOver=true;previousWinner=p;turn=p;say(msg);render();modalTitle.textContent=`${name(p)} gagnent !`;modalMsg.textContent=msg;modal.classList.remove('hidden');}
   function scheduleAI(){
-
-  
 if (bonusPending !== null) {
   const targets = board
     .map((p, i) => p === bonusPending ? i : -1)
@@ -131,13 +114,10 @@ if (bonusPending !== null) {
     if (aiMode && turn === B) scheduleAI();
     return;
   }
-
   chain = null;
   finishTurn(B, W, 'Bonus obligatoire effectué par les Noirs.');
   return;
-}
-
-    
+}   
   if(!aiMode||gameOver||aiBusy||turn!==B&&phase==='play'||placing!==B&&phase==='placement')return;aiBusy=true;say('L’ordinateur réfléchit…');setTimeout(()=>{aiBusy=false;if(gameOver)return;if(phase==='placement'){let spots=board.map((x,i)=>x===E&&i!==center?i:-1).filter(i=>i>=0);const starter=turn;const starterCountNow=board.filter(x=>x===starter).length;if(starter===B&&starterCountNow===11)spots=spots.filter(i=>{board[i]=B;const ok=hasCenterOpeningMove();board[i]=E;return ok;});let i=choosePlacement(spots);if(i!==undefined){board[i]=B;let n=board.filter(x=>x===B).length;if(board.filter(x=>x===B).length===12&&board.filter(x=>x===W).length===12){phase='play';openingMovePending=true;say(`Placement terminé. Les ${name(turn)} commencent.`);}else{placing=W;say(`Noirs : pion ${n}/12 placé. À Blancs de placer un pion.`);}render();if(phase==='play'&&!hasCenterOpeningMove(turn))finish(other(turn),`Les ${name(turn)} ont perdu : aucun déplacement ni aucune capture vers la case centrale n’est possible.`);else if(phase==='play'){openingMovePending=true;if(turn===B)scheduleAI();}}return;}let options=chain!==null?movesFrom(chain).filter(m=>m.cap!==null):allMoves(B);if(openingMovePending)options=options.filter(m=>m.to===center);if(!options.length){finish(W,'Les Noirs sont bloqués.');return;}let m=chooseMove(options);play(m);},450);}
   $('#customRestart').onclick=reset;$('#customPlayAgain').onclick=reset;$('#customOpponent').onchange=e=>{aiMode=e.target.value==='ai';$('#customDifficultyWrap').classList.toggle('hidden',!aiMode);$('#customDifficulty').classList.toggle('hidden',!aiMode);reset();};$('#customDifficulty').onchange=reset;
   function choosePlacement(spots){if(!spots.length)return undefined;if(difficulty==='easy')return spots[Math.floor(Math.random()*spots.length)];const ranked=spots.map(i=>({i,score:(difficulty==='hard'?3:1)*(8-Math.abs(row(i)-2)-Math.abs(col(i)-2))+Math.random()*(difficulty==='hard'?0.2:5)}));ranked.sort((a,b)=>b.score-a.score);return ranked[0].i;}
