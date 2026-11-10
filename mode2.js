@@ -1,6 +1,6 @@
 (() => {
   const N=5, B='black', W='white', E=null, center=12;
-  let board, phase, placing, turn, selected, chain, gameOver, aiMode, aiBusy, captures, lastMove, difficulty, openingMovePending;
+  let board, phase, placing, turn, selected, chain, bonusPending, gameOver, aiMode, aiBusy, captures, lastMove, difficulty, openingMovePending;
   let previousWinner = null;
   const $=s=>document.querySelector(s);
   const boardEl=$('#customBoard'), status=$('#customStatus'), turnEl=$('#customTurn'), blackCount=$('#customBlackCount'), whiteCount=$('#customWhiteCount'), blackCap=$('#customBlackCap'), whiteCap=$('#customWhiteCap'), modal=$('#customEndModal'), modalTitle=$('#customEndTitle'), modalMsg=$('#customEndMessage');
