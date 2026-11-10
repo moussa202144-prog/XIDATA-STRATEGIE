@@ -131,3 +131,9 @@ footer { text-align:center; padding:24px 0 6px; }
 /* Pions pouvant être retirés après un refus de capture : sélection directe sur le plateau. */
 .cell.sanction-candidate { outline: 4px solid #f0d96b; outline-offset: -5px; box-shadow: inset 0 0 0 3px rgba(240,217,107,.5); cursor: crosshair; }
 .cell.sanction-candidate .stone { filter: drop-shadow(0 0 5px rgba(240,217,107,.95)); }
+#onlinePanel {
+  display: block;
+  visibility: visible;
+  width: 100%;
+  margin-top: 20px;
+}
