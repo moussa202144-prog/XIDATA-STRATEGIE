@@ -97,11 +97,30 @@ joinRoomBtn.addEventListener("click", async () => {
 
     const roomRef = window.firebaseDb.ref("rooms/" + code);
 
+    
+    const roomRef = window.firebaseDb.ref("rooms/" + code);
+
+    // Vérifier que le salon existe
+    const snapshot = await roomRef.get();
+
+    if (!snapshot.exists()) {
+      throw new Error("Ce code ne correspond à aucun salon.");
+    }
+
+    const roomInfo = snapshot.val();
+
+    if (roomInfo.status !== "waiting" ||
+        roomInfo.guest != null ||
+        roomInfo.host === user.uid) {
+      throw new Error("Salon déjà occupé ou impossible à rejoindre.");
+    }
+
+    // Rejoindre le salon
     const result = await roomRef.transaction(room => {
       if (
         room === null ||
         room.status !== "waiting" ||
-        room.guest !== null ||
+        room.guest != null ||
         room.host === user.uid
       ) {
         return;
@@ -113,19 +132,14 @@ joinRoomBtn.addEventListener("click", async () => {
     });
 
     if (!result.committed) {
-      throw new Error("Salon introuvable ou déjà occupé.");
+      throw new Error("Impossible de rejoindre ce salon. Réessaie.");
     }
 
     currentRoomCode = code;
+
     onlineStatus.textContent =
       "Partie rejointe ! En attente de la synchronisation du plateau.";
 
-  } catch (error) {
-    onlineStatus.textContent = "Erreur : " + error.message;
-  } finally {
-    joinRoomBtn.disabled = false;
-  }
-});
 
 // Copier le code
 document.querySelector("#copyInvitationBtn")
