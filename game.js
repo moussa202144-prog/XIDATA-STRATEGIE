@@ -260,6 +260,7 @@ function startOnlineGame() {
     applyingOnlineState = false;
   });
 }
+window.startOnlineGame = startOnlineGame;
 
 function render() {
   boardEl.innerHTML = "";
