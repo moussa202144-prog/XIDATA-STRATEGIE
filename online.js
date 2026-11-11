@@ -73,6 +73,9 @@ createRoomBtn.addEventListener("click", async () => {
 
     window.currentRoomCode = code;
     window.currentRoomRole = "host";
+if (typeof window.startOnlineGame === "function") {
+  window.startOnlineGame();
+}
     invitationCode.textContent = code;
     roomCodeInput.value = code;
     invitationArea.hidden = false;
@@ -128,6 +131,9 @@ joinRoomBtn.addEventListener("click", async () => {
 
     window.currentRoomCode = code;
     window.currentRoomRole = "guest";
+if (typeof window.startOnlineGame === "function") {
+  window.startOnlineGame();
+}
     onlineStatus.textContent =
       "Partie rejointe ! En attente de la synchronisation du plateau.";
 
