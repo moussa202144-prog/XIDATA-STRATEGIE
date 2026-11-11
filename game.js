@@ -408,6 +408,7 @@ function endTurn(lastPlayer, nextPlayer, message) {
   if (captures[lastPlayer] >= WIN_CAPTURES) { finishGame(lastPlayer, `${playerName(lastPlayer)} gagnent en capturant les 12 pions adverses !`); return; }
   if (captures[nextPlayer] >= WIN_CAPTURES) { finishGame(nextPlayer, `${playerName(nextPlayer)} gagnent en capturant les 12 pions adverses !`); return; }
   currentPlayer = nextPlayer;
+saveOnlineState();
   if (allMoves(currentPlayer).length === 0) { finishGame(lastPlayer, `${playerName(lastPlayer)} gagnent : l'adversaire est bloqué.`); return; }
   setStatus(`${message} Au tour des ${playerName(nextPlayer).toLowerCase()}.`); render();
   if (aiMode && currentPlayer === BLACK && !gameOver) scheduleAiMove();
