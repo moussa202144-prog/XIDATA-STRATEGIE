@@ -64,6 +64,9 @@ function newGame() {
   sanctionBox.classList.add("hidden");
   setStatus(aiMode ? (currentPlayer === WHITE ? "Mode contre l’IA : vous commencez avec les Blancs." : "Le gagnant précédent conserve les Noirs : l’IA commence.") : `Le gagnant précédent commence avec les ${playerName(currentPlayer).toLowerCase()}.`);
   render();
+if (window.currentRoomCode && window.currentRoomRole === "host") {
+  saveOnlineState();
+}
   if (aiMode && currentPlayer === BLACK) scheduleAiMove();
 }
 function getMoves(index) {
