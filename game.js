@@ -339,9 +339,11 @@ function promoteIfNeeded(index, player) {
   board[move.to] = player; board[move.from] = EMPTY;
   if (wasKing) { kings.delete(move.from); kings.add(move.to); }
   lastMove = move.to; selected = null;
+saveOnlineState();
   promoteIfNeeded(move.to, player);
   if (isCapture) {
     board[move.capture] = EMPTY; kings.delete(move.capture); captures[player]++;
+saveOnlineState();
     chainPiece = move.to; chainPlayer = player;
     if (captures[player] >= WIN_CAPTURES) { finishGame(player, `${playerName(player)} gagnent en capturant les 12 pions adverses !`); return; }
     const nextCaptures = captureMovesOnBoard(board, kings, chainPiece, player);
@@ -375,6 +377,7 @@ function promoteIfNeeded(index, player) {
       } else {
         // À deux joueurs humains : l'adversaire choisit le pion à retirer.
         pendingSanction = { offender: player, beneficiary: enemy, candidates };
+saveOnlineState();
         currentPlayer = enemy;
         selected = null;
         setStatus("Capture refusée : touchez sur le plateau un pion encadré en jaune pour le retirer.");
@@ -393,6 +396,7 @@ function applySanction(index) {
   if (!pendingSanction || !pendingSanction.candidates.includes(index)) return;
   const { offender, beneficiary } = pendingSanction;
   board[index] = EMPTY; kings.delete(index); captures[beneficiary]++;
+saveOnlineState();
   pendingSanction = null; sanctionBox.classList.add("hidden"); sanctionChoices.innerHTML = "";
   if (captures[beneficiary] >= WIN_CAPTURES) { finishGame(beneficiary, `${playerName(beneficiary)} gagnent : les 12 pions adverses ont été capturés.`); return; }
   endTurn(offender, beneficiary, `Sanction appliquée : un pion pouvant capturer a été retiré.`);
