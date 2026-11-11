@@ -117,39 +117,12 @@ joinRoomBtn.addEventListener("click", async () => {
     }
 
     
-    let raisonRefus = "";
 
-    const result = await roomRef.transaction(room => {
-      if (room === null) {
-        raisonRefus = "Le salon n'existe plus.";
-        return;
-      }
-
-      if (room.status !== "waiting") {
-        raisonRefus = "Le salon n'est plus en attente.";
-        return;
-      }
-
-      if (room.guest != null) {
-        raisonRefus = "Un deuxième joueur est déjà inscrit.";
-        return;
-      }
-
-      if (room.host === user.uid) {
-        raisonRefus = "Cet identifiant est celui de l'hôte.";
-        return;
-      }
-
-      room.guest = user.uid;
-      room.status = "playing";
-      return room;
+    await roomRef.update({
+      guest: user.uid,
+      status: "playing"
     });
 
-    if (!result.committed) {
-      throw new Error(
-        raisonRefus || "La transaction Firebase a été refusée."
-      );
-    }
 
     currentRoomCode = code;
 
