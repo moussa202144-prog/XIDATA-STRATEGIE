@@ -12,14 +12,17 @@ const firebaseConfig = {
 };
 
 // Initialisation Firebase
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 
 // Services Firebase
 window.firebaseAuth = firebase.auth();
 window.firebaseDb = firebase.database();
 
-// Connexion anonyme du joueur
-window.firebaseAuth.signInAnonymously()
+// Une seule connexion anonyme
+window.firebaseReady = window.firebaseAuth
+  .signInAnonymously()
   .then((result) => {
     window.currentPlayer = result.user;
 
@@ -27,12 +30,23 @@ window.firebaseAuth.signInAnonymously()
       "XIDATA STRATEGIE connecté !",
       result.user.uid
     );
+
+    const status = document.querySelector("#onlineStatus");
+
+    if (status) {
+      status.textContent =
+        "Connecté à Firebase. Identifiant : " +
+        result.user.uid;
+    }
+
+    return result.user;
   })
   .catch((error) => {
-    console.error("Erreur Firebase :", error.message);
-  });
-window.firebaseReady = window.firebaseAuth.signInAnonymously()
-  .then(result => {
-    window.currentPlayer = result.user;
-    return result.user;
+    console.error(
+      "Erreur Firebase :",
+      error.code,
+      error.message
+    );
+
+    throw error;
   });
