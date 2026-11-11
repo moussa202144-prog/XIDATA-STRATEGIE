@@ -116,13 +116,27 @@ joinRoomBtn.addEventListener("click", async () => {
       throw new Error("Salon déjà occupé ou impossible à rejoindre.");
     }
 
+    
+    let raisonRefus = "";
+
     const result = await roomRef.transaction(room => {
-      if (
-        room === null ||
-        room.status !== "waiting" ||
-        room.guest != null ||
-        room.host === user.uid
-      ) {
+      if (room === null) {
+        raisonRefus = "Le salon n'existe plus.";
+        return;
+      }
+
+      if (room.status !== "waiting") {
+        raisonRefus = "Le salon n'est plus en attente.";
+        return;
+      }
+
+      if (room.guest != null) {
+        raisonRefus = "Un deuxième joueur est déjà inscrit.";
+        return;
+      }
+
+      if (room.host === user.uid) {
+        raisonRefus = "Cet identifiant est celui de l'hôte.";
         return;
       }
 
@@ -132,7 +146,9 @@ joinRoomBtn.addEventListener("click", async () => {
     });
 
     if (!result.committed) {
-      throw new Error("Impossible de rejoindre ce salon. Réessaie.");
+      throw new Error(
+        raisonRefus || "La transaction Firebase a été refusée."
+      );
     }
 
     currentRoomCode = code;
