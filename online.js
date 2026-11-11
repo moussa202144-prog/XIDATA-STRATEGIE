@@ -10,7 +10,7 @@ const onlineStatus = document.querySelector("#onlineStatus");
 const copyInvitationBtn = document.querySelector("#copyInvitationBtn");
 const shareInvitationBtn = document.querySelector("#shareInvitationBtn");
 
-let currentRoomCode = null;
+window.currentRoomCode = null;
 
 // Générer un code de 6 caractères
 function generateRoomCode() {
@@ -70,7 +70,7 @@ createRoomBtn.addEventListener("click", async () => {
       throw new Error("Impossible de créer un code disponible.");
     }
 
-    currentRoomCode = code;
+    window.currentRoomCode = code;
     invitationCode.textContent = code;
     roomCodeInput.value = code;
     invitationArea.hidden = false;
@@ -124,7 +124,7 @@ joinRoomBtn.addEventListener("click", async () => {
     });
 
 
-    currentRoomCode = code;
+    window.currentRoomCode = code;
 
     onlineStatus.textContent =
       "Partie rejointe ! En attente de la synchronisation du plateau.";
@@ -140,7 +140,7 @@ joinRoomBtn.addEventListener("click", async () => {
 // COPIER LE CODE
 copyInvitationBtn.addEventListener("click", async () => {
   try {
-    await navigator.clipboard.writeText(currentRoomCode);
+    await navigator.clipboard.writeText(window.currentRoomCode);
     onlineStatus.textContent = "Code copié !";
   } catch (error) {
     onlineStatus.textContent =
@@ -150,10 +150,10 @@ copyInvitationBtn.addEventListener("click", async () => {
 
 // PARTAGER LE LIEN
 shareInvitationBtn.addEventListener("click", async () => {
-  if (!currentRoomCode) return;
+  if (!window.currentRoomCode) return;
 
   const url = new URL(window.location.href);
-  url.searchParams.set("room", currentRoomCode);
+  url.searchParams.set("room", window.currentRoomCode);
 
   try {
     if (navigator.share) {
