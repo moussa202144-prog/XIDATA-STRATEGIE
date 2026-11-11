@@ -7,6 +7,7 @@ const WIN_CAPTURES = 12;
 let board = [];
 let kings = new Set();
 let currentPlayer = WHITE;
+let applyingOnlineState = false;
 let captures = { black: 0, white: 0 };
 let gameOver = false;
 let selected = null;
@@ -200,6 +201,27 @@ function legalMovesForPlayer(player) {
   return allMoves(player);
 }
 function setStatus(message) { statusText.textContent = message; }
+
+function saveOnlineState() {
+  if (!window.currentRoomCode || applyingOnlineState) return;
+
+  const state = {
+    board: board,
+    kings: Array.from(kings),
+    currentPlayer: currentPlayer,
+    captures: captures,
+    gameOver: gameOver,
+    lastMove: lastMove,
+    pendingSanction: pendingSanction,
+    chainPiece: chainPiece,
+    chainPlayer: chainPlayer
+  };
+
+  window.firebaseDb
+    .ref("rooms/" + window.currentRoomCode + "/gameState")
+    .set(state);
+}
+
 function render() {
   boardEl.innerHTML = "";
   const destinations = selected === null ? [] : legalMovesFrom(selected);
