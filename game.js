@@ -297,6 +297,14 @@ function render() {
   turnStone.className = `turn-stone ${currentPlayer}`;
 }
 function handleCell(index) {
+if (window.currentRoomCode) {
+  const myColor =
+    window.currentRoomRole === "host" ? WHITE : BLACK;
+
+  if (currentPlayer !== myColor || gameOver) {
+    return;
+  }
+}
   if (gameOver || aiThinking || (aiMode && currentPlayer === BLACK)) return;
   if (pendingSanction) {
     if (pendingSanction.candidates.includes(index)) applySanction(index);
