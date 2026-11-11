@@ -7,6 +7,8 @@ const roomCodeInput = document.querySelector("#roomCode");
 const invitationArea = document.querySelector("#invitationArea");
 const invitationCode = document.querySelector("#invitationCode");
 const onlineStatus = document.querySelector("#onlineStatus");
+const copyInvitationBtn = document.querySelector("#copyInvitationBtn");
+const shareInvitationBtn = document.querySelector("#shareInvitationBtn");
 
 let currentRoomCode = null;
 
@@ -22,7 +24,7 @@ function generateRoomCode() {
   return code;
 }
 
-// Créer une partie
+// CRÉER UNE PARTIE
 createRoomBtn.addEventListener("click", async () => {
   try {
     createRoomBtn.disabled = true;
@@ -78,12 +80,13 @@ createRoomBtn.addEventListener("click", async () => {
 
   } catch (error) {
     onlineStatus.textContent = "Erreur : " + error.message;
+    console.error(error);
   } finally {
     createRoomBtn.disabled = false;
   }
 });
 
-// Rejoindre une partie avec un code
+// REJOINDRE UNE PARTIE
 joinRoomBtn.addEventListener("click", async () => {
   try {
     joinRoomBtn.disabled = true;
@@ -97,10 +100,6 @@ joinRoomBtn.addEventListener("click", async () => {
 
     const roomRef = window.firebaseDb.ref("rooms/" + code);
 
-    
-    const roomRef = window.firebaseDb.ref("rooms/" + code);
-
-    // Vérifier que le salon existe
     const snapshot = await roomRef.get();
 
     if (!snapshot.exists()) {
@@ -109,13 +108,14 @@ joinRoomBtn.addEventListener("click", async () => {
 
     const roomInfo = snapshot.val();
 
-    if (roomInfo.status !== "waiting" ||
-        roomInfo.guest != null ||
-        roomInfo.host === user.uid) {
+    if (
+      roomInfo.status !== "waiting" ||
+      roomInfo.guest != null ||
+      roomInfo.host === user.uid
+    ) {
       throw new Error("Salon déjà occupé ou impossible à rejoindre.");
     }
 
-    // Rejoindre le salon
     const result = await roomRef.transaction(room => {
       if (
         room === null ||
@@ -140,41 +140,46 @@ joinRoomBtn.addEventListener("click", async () => {
     onlineStatus.textContent =
       "Partie rejointe ! En attente de la synchronisation du plateau.";
 
+  } catch (error) {
+    onlineStatus.textContent = "Erreur : " + error.message;
+    console.error(error);
+  } finally {
+    joinRoomBtn.disabled = false;
+  }
+});
 
-// Copier le code
-document.querySelector("#copyInvitationBtn")
-  .addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(currentRoomCode);
-      onlineStatus.textContent = "Code copié !";
-    } catch (error) {
-      onlineStatus.textContent =
-        "Copie impossible. Note le code affiché.";
+// COPIER LE CODE
+copyInvitationBtn.addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(currentRoomCode);
+    onlineStatus.textContent = "Code copié !";
+  } catch (error) {
+    onlineStatus.textContent =
+      "Copie impossible. Note le code affiché.";
+  }
+});
+
+// PARTAGER LE LIEN
+shareInvitationBtn.addEventListener("click", async () => {
+  if (!currentRoomCode) return;
+
+  const url = new URL(window.location.href);
+  url.searchParams.set("room", currentRoomCode);
+
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: "XIDATA STRATÉGIE",
+        text: "Rejoins ma partie !",
+        url: url.toString()
+      });
+    } else {
+      await navigator.clipboard.writeText(url.toString());
+      onlineStatus.textContent = "Lien copié !";
     }
-  });
-
-// Partager le lien
-document.querySelector("#shareInvitationBtn")
-  .addEventListener("click", async () => {
-    if (!currentRoomCode) return;
-
-    const url = new URL(window.location.href);
-    url.searchParams.set("room", currentRoomCode);
-
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: "XIDATA STRATÉGIE",
-          text: "Rejoins ma partie !",
-          url: url.toString()
-        });
-      } else {
-        await navigator.clipboard.writeText(url.toString());
-        onlineStatus.textContent = "Lien copié !";
-      }
-    } catch (error) {
-      if (error.name !== "AbortError") {
-        onlineStatus.textContent = "Impossible de partager le lien.";
-      }
+  } catch (error) {
+    if (error.name !== "AbortError") {
+      onlineStatus.textContent = "Impossible de partager le lien.";
     }
-  });
+  }
+});
