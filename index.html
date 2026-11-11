@@ -19,6 +19,35 @@
     </header>
 
     <section class="mode-picker">
+
+<section id="onlinePanel" class="mode-picker">
+  <h2>Jouer en ligne</h2>
+
+  <button id="createRoomBtn" class="button" type="button">
+    Créer une partie
+  </button>
+
+  <div>
+    <label for="roomCode">Code d'invitation</label>
+    <input id="roomCode" type="text" placeholder="Entrer le code">
+    <button id="joinRoomBtn" class="button secondary" type="button">
+      Rejoindre
+    </button>
+  </div>
+
+  <div id="invitationArea" hidden>
+    <p>Code : <strong id="invitationCode"></strong></p>
+    <button id="copyInvitationBtn" class="button secondary" type="button">
+      Copier le code
+    </button>
+    <button id="shareInvitationBtn" class="button secondary" type="button">
+      Partager le lien
+    </button>
+  </div>
+
+  <p id="onlineStatus">Mode hors ligne</p>
+</section>
+
       <label for="gameMode">Mode de jeu</label>
       <select id="gameMode" class="mode-select"><option value="classic">Mode 1 — Classique</option><option value="custom">Mode 2 — Personnalisé</option></select>
     </section>
