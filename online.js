@@ -11,6 +11,7 @@ const copyInvitationBtn = document.querySelector("#copyInvitationBtn");
 const shareInvitationBtn = document.querySelector("#shareInvitationBtn");
 
 window.currentRoomCode = null;
+window.currentRoomRole = null;
 
 // Générer un code de 6 caractères
 function generateRoomCode() {
