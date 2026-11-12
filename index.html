@@ -115,17 +115,17 @@
     <div class="custom-main">
       <div class="board-panel">
         <div class="board-heading"><div><p class="eyebrow">MODE PERSONNALISÉ</p><h2>Plateau 5 × 5</h2></div><button id="customRestart" class="button secondary" type="button">↻ Recommencer</button></div>
-        <div id="customBoard" class="board" role="grid" aria-label="Plateau personnalisé"></div>
+        <p id="bonusTimer" class="bonus-timer">⏳ Temps restant : 30 s</p>
+<div id="customBoard" class="board" role="grid" aria-label="Plateau personnalisé"></div>
         <p id="customHint" class="board-tip"></p>
       </div>
       <aside class="side-panel">
         <section class="status-card"><p class="eyebrow" id="customPhase">Phase de placement</p><h2 id="customTurn">Placement : Blancs</h2><p id="customStatus" class="status-text" aria-live="polite"></p>
-          <div id="bonusPanel" class="status-card hidden">
-  <strong>Retrait du pion bonus</strong>
-  <p>Choisissez un pion adverse supplémentaire à retirer.</p>
-          <p id="bonusTimer">⏳ Temps restant : 30 s</p>
-  <div id="bonusChoices"></div>
-          </div>
+        <div id="bonusPanel" class="status-card hidden">
+        <strong>Retrait du pion bonus</strong>
+       <p>Choisissez un pion adverse   supplémentaire à retirer.</p>
+        <div id="bonusChoices"></div>
+         </div>
           <label class="custom-label" for="customOpponent">Adversaire</label><select id="customOpponent" class="mode-select"><option value="human">Deux joueurs sur cet appareil</option><option value="ai">Contre l’ordinateur</option></select><label class="custom-label hidden" id="customDifficultyWrap" for="customDifficulty">Difficulté de l’ordinateur</label><select id="customDifficulty" class="mode-select hidden"><option value="easy">Facile</option><option value="medium" selected>Moyen</option><option value="hard">Difficile</option></select>
           
 <div id="bonusTimerSettings">
