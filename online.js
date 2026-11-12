@@ -1,4 +1,3 @@
-
 // XIDATA STRATEGIE - Salons multijoueurs
 
 const createRoomBtn = document.querySelector("#createRoomBtn");
@@ -113,15 +112,26 @@ joinRoomBtn.addEventListener("click", async () => {
 
     const roomInfo = snapshot.val();
 
-    if (
-      roomInfo.status !== "waiting" ||
-      roomInfo.guest != null ||
-      roomInfo.host === user.uid
-    ) {
-      throw new Error("Salon déjà occupé ou impossible à rejoindre.");
-    }
+console.log("DIAGNOSTIC SALON :", {
+  status: roomInfo.status,
+  guest: roomInfo.guest,
+  host: roomInfo.host,
+  currentUser: user.uid
+});
 
-    
+if (roomInfo.status !== "waiting") {
+  throw new Error("Le salon n'est plus en attente. Statut : " + roomInfo.status);
+}
+
+if (roomInfo.guest != null) {
+  throw new Error("Un deuxième joueur occupe déjà ce salon.");
+}
+
+if (roomInfo.host === user.uid) {
+  throw new Error("Tu essaies de rejoindre ton propre salon.");
+}
+
+
 
     await roomRef.update({
       guest: user.uid,
