@@ -320,7 +320,7 @@ function startOnlineGame() {
 
     applyingOnlineState = true;
 
-    board = state.board;
+    board = Array.from({ length: 25 }, (_, i) => state.board?.[i] ?? EMPTY);
     kings = new Set(state.kings || []);
     currentPlayer = state.currentPlayer;
     captures = state.captures;
