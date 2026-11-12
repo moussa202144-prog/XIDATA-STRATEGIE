@@ -443,7 +443,139 @@ lockBonusTimerSettings();
 openingMovePending=true;say(`Placement terminé. Les ${name(turn)} commencent.`);}else{placing=W;say(`Noirs : pion ${n}/12 placé. À Blancs de placer un pion.`);}render();if(phase==='play'&&!hasCenterOpeningMove(turn))finish(other(turn),`Les ${name(turn)} ont perdu : aucun déplacement ni aucune capture vers la case centrale n’est possible.`);else if(phase==='play'){openingMovePending=true;if(turn===B)scheduleAI();}}return;}let options=chain!==null?movesFrom(chain).filter(m=>m.cap!==null):allMoves(B);if(openingMovePending)options=options.filter(m=>m.to===center);if(!options.length){finish(W,'Les Noirs sont bloqués.');return;}let m=chooseMove(options);play(m);},450);}
   $('#customRestart').onclick=reset;$('#customPlayAgain').onclick=reset;$('#customOpponent').onchange=e=>{aiMode=e.target.value==='ai';$('#customDifficultyWrap').classList.toggle('hidden',!aiMode);$('#customDifficulty').classList.toggle('hidden',!aiMode);reset();};$('#customDifficulty').onchange=reset;
   $('#bonusTimerMode').onchange = reset;
-  function choosePlacement(spots){if(!spots.length)return undefined;if(difficulty==='easy')return spots[Math.floor(Math.random()*spots.length)];const ranked=spots.map(i=>({i,score:(difficulty==='hard'?3:1)*(8-Math.abs(row(i)-2)-Math.abs(col(i)-2))+Math.random()*(difficulty==='hard'?0.2:5)}));ranked.sort((a,b)=>b.score-a.score);return ranked[0].i;}
-  function chooseMove(options){if(!options.length)return null;if(difficulty==='easy')return options[Math.floor(Math.random()*options.length)];const ranked=options.map(m=>{let score=m.cap!==null?(difficulty==='hard'?100:60):0;const r=row(m.to),c=col(m.to);score+=(difficulty==='hard'?5:2)*(8-Math.abs(r-2)-Math.abs(c-2));if(difficulty==='hard'){const simulated=board.slice();simulated[m.to]=B;simulated[m.from]=E;if(m.cap!==null)simulated[m.cap]=E;let mobility=0;for(let j=0;j<25;j++)if(simulated[j]===B){for(const [dr,dc] of dirs){let rr=row(j)+dr,cc=col(j)+dc;if(inside(rr,cc)&&simulated[rr*N+cc]===E)mobility++;}}score+=mobility*2;}score+=Math.random()*(difficulty==='hard'?0.5:8);return {m,score};});ranked.sort((a,b)=>b.score-a.score);return ranked[0].m;}
+  function choosePlacement(spots) {
+  if (!spots.length) return undefined;
+
+  if (difficulty === 'easy') {
+    return spots[Math.floor(Math.random() * spots.length)];
+  }
+
+  const ranked = spots.map(i => {
+    let score = 0;
+
+    const r = row(i);
+    const c = col(i);
+
+    // Favoriser les positions proches du centre
+    const centerDistance = Math.abs(r - 2) + Math.abs(c - 2);
+    score += (8 - centerDistance) * (difficulty === 'hard' ? 5 : 2);
+
+    // Éviter de placer un pion directement exposé
+let danger = 0;
+
+for (const [dr, dc] of dirs) {
+  const enemyR = r + dr;
+  const enemyC = c + dc;
+  const landingR = r + 2 * dr;
+  const landingC = c + 2 * dc;
+
+  if (
+    inside(enemyR, enemyC) &&
+    inside(landingR, landingC) &&
+    board[enemyR * N + enemyC] === W &&
+    board[landingR * N + landingC] === E
+  ) {
+    danger++;
+  }
+}
+
+    score -= danger * (difficulty === 'hard' ? 12 : 4);
+
+    // Légère variation pour éviter les choix toujours identiques
+    score += Math.random() * (difficulty === 'hard' ? 0.1 : 5);
+
+    return { i, score };
+  });
+
+  ranked.sort((a, b) => b.score - a.score);
+
+  return ranked[0].i;
+  }
+  function chooseMove(options) {
+  if (!options.length) return null;
+
+  if (difficulty === 'easy') {
+    return options[Math.floor(Math.random() * options.length)];
+  }
+
+  const opponent = other(B);
+
+  const ranked = options.map(m => {
+    const simulated = board.slice();
+
+    simulated[m.to] = B;
+    simulated[m.from] = E;
+
+    let score = 0;
+
+    // 1. Valoriser les captures
+    if (m.cap !== null) {
+      simulated[m.cap] = E;
+      score += 100;
+    }
+
+    // 2. Favoriser les positions centrales
+    const distance =
+      Math.abs(row(m.to) - 2) +
+      Math.abs(col(m.to) - 2);
+
+    score += (8 - distance) * 5;
+
+    // 3. Évaluer les possibilités de capture adverses
+    let danger = 0;
+
+    for (let i = 0; i < 25; i++) {
+      if (simulated[i] !== opponent) continue;
+
+      const r = row(i);
+      const c = col(i);
+
+      for (const [dr, dc] of dirs) {
+        const middleR = r + dr;
+        const middleC = c + dc;
+        const landingR = r + 2 * dr;
+        const landingC = c + 2 * dc;
+
+        if (
+          inside(middleR, middleC) &&
+          inside(landingR, landingC) &&
+          simulated[middleR * N + middleC] === B &&
+          simulated[landingR * N + landingC] === E
+        ) {
+          danger++;
+        }
+      }
+    }
+
+    score -= danger * 35;
+
+    // 4. Favoriser les déplacements qui gardent des possibilités
+    let mobility = 0;
+
+    for (let i = 0; i < 25; i++) {
+      if (simulated[i] !== B) continue;
+
+      for (const [dr, dc] of dirs) {
+        const rr = row(i) + dr;
+        const cc = col(i) + dc;
+
+        if (inside(rr, cc) && simulated[rr * N + cc] === E) {
+          mobility++;
+        }
+      }
+    }
+
+    score += mobility * 2;
+
+    // 5. Petite variation pour départager les coups proches
+    score += Math.random() * 0.1;
+
+    return { m, score };
+  });
+
+  ranked.sort((a, b) => b.score - a.score);
+
+  return ranked[0].m;
+  }
   reset();
 })();
