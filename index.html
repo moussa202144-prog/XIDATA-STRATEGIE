@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#17211b">
+  <link rel="manifest" href="manifest.json">
+<meta name="description" content="XIDATA STRATÉGIE : jeu de stratégie avec IA et multijoueur en ligne.">
   <title>XIDATA STRATÉGIE</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -193,6 +195,15 @@ document.body.appendChild(script);
     }
     modePicker.addEventListener('change', switchMode);
     switchMode();
+  </script>
+  <script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js")
+      .then(() => console.log("XIDATA PWA activée"))
+      .catch(error => console.error("Erreur PWA :", error));
+  });
+}
   </script>
 </body>
 </html>
