@@ -1,0 +1,14 @@
+
+{
+  "id": "./",
+  "name": "XIDATA STRATÉGIE",
+  "short_name": "XIDATA",
+  "description": "Jeu de stratégie à deux joueurs avec IA et parties en ligne.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#17211b",
+  "theme_color": "#17211b"
+}
