@@ -1,4 +1,18 @@
 
+ // XIDATA STRATEGIE - Salons multijoueurs
+
+const createRoomBtn = document.querySelector("#createRoomBtn");
+const joinRoomBtn = document.querySelector("#joinRoomBtn");
+const roomCodeInput = document.querySelector("#roomCode");
+const invitationArea = document.querySelector("#invitationArea");
+const invitationCode = document.querySelector("#invitationCode");
+const onlineStatus = document.querySelector("#onlineStatus");
+const copyInvitationBtn = document.querySelector("#copyInvitationBtn");
+const shareInvitationBtn = document.querySelector("#shareInvitationBtn");
+
+window.currentRoomCode = null;
+window.currentRoomRole = null;
+
 // Rejoindre une partie avec un code
 joinRoomBtn.addEventListener("click", async () => {
   try {
