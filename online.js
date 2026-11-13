@@ -25,7 +25,8 @@ function generateRoomCode() {
 }
 
 // CRÉER UNE PARTIE
-createRoomBtn.addEventListener("click", async () => {
+createRoomBtn.addEventListener("click", async () => {console.log("BOUTON CRÉER CLIQUÉ");
+onlineStatus.textContent = "Bouton détecté : création en cours...";
   try {
     createRoomBtn.disabled = true;
     onlineStatus.textContent = "Création du salon...";
