@@ -565,15 +565,10 @@ function commitMove(move) {
           "Capture refusée : un pion pouvant capturer a été retiré automatiquement."
         );
       } else {
-        pendingSanction = {
-          offender: player,
-          beneficiary: enemy,
-          candidates
-        };
-
-        saveOnlineState();
-        currentPlayer = enemy;
-        selected = null;
+        pendingSanction = { offender: player, beneficiary: enemy, candidates };
+currentPlayer = enemy;
+selected = null;
+saveOnlineState();   // ← après le changement de joueur
 
         setStatus(
           "Capture refusée : touchez sur le plateau un pion encadré en jaune pour le retirer."
