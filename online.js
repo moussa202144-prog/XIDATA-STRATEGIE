@@ -13,6 +13,9 @@ const shareInvitationBtn = document.querySelector("#shareInvitationBtn");
 window.currentRoomCode = null;
 window.currentRoomRole = null;
 
+// Marqueur visible : si tu ne vois pas "v3", c'est l'ancienne version en cache
+onlineStatus.textContent = "Mode hors ligne (v3)";
+
 // Pré-remplir le code si on arrive par un lien ?room=CODE
 // (doit être placé APRÈS la déclaration de roomCodeInput)
 const roomParam = new URLSearchParams(location.search).get("room");
@@ -108,6 +111,9 @@ joinRoomBtn.addEventListener("click", async () => {
     }
 
     const roomRef = window.firebaseDb.ref("rooms/" + code);
+
+    // Charger le salon d'abord : le cache local n'est plus vide
+    await roomRef.once("value");
 
     const result = await roomRef.transaction(room => {
       // Cache local vide : Firebase relancera avec la vraie valeur
@@ -212,4 +218,3 @@ shareInvitationBtn.addEventListener("click", async () => {
     }
   }
 });
-
