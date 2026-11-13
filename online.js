@@ -90,7 +90,7 @@ if (typeof window.startOnlineGame === "function") {
   }
 });
 
-// REJOINDRE UNE PARTIE
+// Rejoindre une partie avec un code
 joinRoomBtn.addEventListener("click", async () => {
   try {
     joinRoomBtn.disabled = true;
@@ -104,48 +104,36 @@ joinRoomBtn.addEventListener("click", async () => {
 
     const roomRef = window.firebaseDb.ref("rooms/" + code);
 
-    const snapshot = await roomRef.get();
+    const result = await roomRef.transaction(room => {
+      if (
+        room === null ||
+        room.status !== "waiting" ||
+        room.guest !== null ||
+        room.host === user.uid
+      ) {
+        return;
+      }
 
-    if (!snapshot.exists()) {
-      throw new Error("Ce code ne correspond à aucun salon.");
-    }
-
-    const roomInfo = snapshot.val();
-
-console.log("DIAGNOSTIC SALON :", {
-  status: roomInfo.status,
-  guest: roomInfo.guest,
-  host: roomInfo.host,
-  currentUser: user.uid
-});
-
-if (roomInfo.status !== "waiting") {
-  throw new Error("Le salon n'est plus en attente. Statut : " + roomInfo.status);
-}
-
-if (roomInfo.guest != null) {
-  throw new Error("Un deuxième joueur occupe déjà ce salon.");
-}
-
-if (roomInfo.host === user.uid) {
-  throw new Error("Tu essaies de rejoindre ton propre salon.");
-}
-
-
-
-    await roomRef.update({
-      guest: user.uid,
-      status: "playing"
+      room.guest = user.uid;
+      room.status = "playing";
+      return room;
     });
 
+    if (!result.committed) {
+      throw new Error("Salon introuvable ou déjà occupé.");
+    }
 
     window.currentRoomCode = code;
     window.currentRoomRole = "guest";
-if (typeof window.startOnlineGame === "function") {
-  window.startOnlineGame();
-}
+
+    if (typeof window.startOnlineGame === "function") {
+      window.startOnlineGame();
+    } else {
+      throw new Error("La synchronisation du jeu n'est pas chargée.");
+    }
+
     onlineStatus.textContent =
-      "Partie rejointe ! En attente de la synchronisation du plateau.";
+      "Partie rejointe ! Synchronisation du plateau en cours.";
 
   } catch (error) {
     onlineStatus.textContent = "Erreur : " + error.message;
