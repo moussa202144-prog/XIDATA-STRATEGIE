@@ -120,7 +120,33 @@ joinRoomBtn.addEventListener("click", async () => {
     });
 
     if (!result.committed) {
-      throw new Error("Salon introuvable ou déjà occupé.");
+  const check = await roomRef.once("value");
+  const room = check.val();
+
+  console.log("DIAGNOSTIC SALON :", {
+    code: code,
+    room: room,
+    uid: user.uid,
+    committed: result.committed
+  });
+
+  if (!room) {
+    throw new Error("Le salon n'existe pas ou est inaccessible.");
+  }
+
+  if (room.status !== "waiting") {
+    throw new Error("Le salon n'est pas en attente : " + room.status);
+  }
+
+  if (room.guest != null) {
+    throw new Error("Ce salon possède déjà un deuxième joueur.");
+  }
+
+  if (room.host === user.uid) {
+    throw new Error("Les deux téléphones utilisent le même compte Firebase.");
+  }
+
+  throw new Error("Transaction refusée par Firebase. Vérifier les règles.");
     }
 
     window.currentRoomCode = code;
