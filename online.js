@@ -8,7 +8,14 @@ const invitationCode = document.querySelector("#invitationCode");
 const onlineStatus = document.querySelector("#onlineStatus");
 const copyInvitationBtn = document.querySelector("#copyInvitationBtn");
 const shareInvitationBtn = document.querySelector("#shareInvitationBtn");
+console.log("ONLINE.JS CHARGÉ");
 
+console.log({
+  createRoomBtn: createRoomBtn,
+  joinRoomBtn: joinRoomBtn,
+  firebaseReady: !!window.firebaseReady,
+  firebaseDb: !!window.firebaseDb
+});
 window.currentRoomCode = null;
 window.currentRoomRole = null;
 
