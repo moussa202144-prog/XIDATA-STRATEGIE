@@ -325,10 +325,10 @@ function startOnlineGame() {
     currentPlayer = state.currentPlayer;
     captures = state.captures;
     gameOver = state.gameOver;
-    lastMove = state.lastMove;
-    pendingSanction = state.pendingSanction;
-    chainPiece = state.chainPiece;
-    chainPlayer = state.chainPlayer;
+    lastMove = state.lastMove ?? null;
+pendingSanction = state.pendingSanction ?? null;
+chainPiece = state.chainPiece ?? null;
+chainPlayer = state.chainPlayer ?? null;
 
     selected = null;
 
