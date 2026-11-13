@@ -1,13 +1,6 @@
-const gm = document.querySelector("#gameMode");
-if (gm.value !== "classic") { gm.value = "classic"; gm.dispatchEvent(new Event("change")); }
+// XIDATA STRATEGIE - Salons multijoueurs
 console.log("ONLINE.JS DÉMARRÉ");
 
-console.log("Bouton créer :", document.querySelector("#createRoomBtn"));
-
-console.log("Firebase :", window.firebaseDb);
- // XIDATA STRATEGIE - Salons multijoueurs
-const roomParam = new URLSearchParams(location.search).get("room");
-if (roomParam) roomCodeInput.value = roomParam.toUpperCase();
 const createRoomBtn = document.querySelector("#createRoomBtn");
 const joinRoomBtn = document.querySelector("#joinRoomBtn");
 const roomCodeInput = document.querySelector("#roomCode");
@@ -19,7 +12,22 @@ const shareInvitationBtn = document.querySelector("#shareInvitationBtn");
 
 window.currentRoomCode = null;
 window.currentRoomRole = null;
-// Créer une partie
+
+// Pré-remplir le code si on arrive par un lien ?room=CODE
+// (doit être placé APRÈS la déclaration de roomCodeInput)
+const roomParam = new URLSearchParams(location.search).get("room");
+if (roomParam) roomCodeInput.value = roomParam.toUpperCase();
+
+// Le jeu en ligne n'existe que pour le Mode 1 (Classique)
+function forceClassicMode() {
+  const gm = document.querySelector("#gameMode");
+  if (gm.value !== "classic") {
+    gm.value = "classic";
+    gm.dispatchEvent(new Event("change"));
+  }
+}
+
+// Générer un code de salon à 6 caractères
 function generateRoomCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code = "";
@@ -29,9 +37,11 @@ function generateRoomCode() {
   return code;
 }
 
+// CRÉER UNE PARTIE
 createRoomBtn.addEventListener("click", async () => {
   try {
     createRoomBtn.disabled = true;
+    forceClassicMode();
     onlineStatus.textContent = "Création de la partie...";
 
     const user = await window.firebaseReady;
@@ -82,15 +92,16 @@ createRoomBtn.addEventListener("click", async () => {
     createRoomBtn.disabled = false;
   }
 });
-// Rejoindre une partie avec un code
+
+// REJOINDRE UNE PARTIE AVEC UN CODE
 joinRoomBtn.addEventListener("click", async () => {
   try {
     joinRoomBtn.disabled = true;
+    forceClassicMode();
 
     const user = await window.firebaseReady;
     const code = roomCodeInput.value.trim().toUpperCase();
-    console.log("CODE SAISI :", roomCodeInput.value);
-console.log("CODE RÉCUPÉRÉ :", code);
+    console.log("CODE RÉCUPÉRÉ :", code);
 
     if (!/^[A-Z0-9]{6}$/.test(code)) {
       throw new Error("Le code doit contenir 6 caractères.");
@@ -99,23 +110,25 @@ console.log("CODE RÉCUPÉRÉ :", code);
     const roomRef = window.firebaseDb.ref("rooms/" + code);
 
     const result = await roomRef.transaction(room => {
-      if (room === null) return;
+      // Cache local vide : Firebase relancera avec la vraie valeur
+      if (room === null) return null;
 
       if (
         room.status !== "waiting" ||
         room.guest != null ||
         room.host === user.uid
       ) {
-        return;
+        return; // refus réel
       }
 
       room.guest = user.uid;
       room.status = "playing";
-
       return room;
     });
 
-    if (!result.committed) {
+    const finalRoom = result.snapshot.val();
+
+    if (!result.committed || !finalRoom || finalRoom.guest !== user.uid) {
       const check = await roomRef.once("value");
       const room = check.val();
 
@@ -164,14 +177,14 @@ console.log("CODE RÉCUPÉRÉ :", code);
     joinRoomBtn.disabled = false;
   }
 });
+
 // COPIER LE CODE
 copyInvitationBtn.addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText(window.currentRoomCode);
     onlineStatus.textContent = "Code copié !";
   } catch (error) {
-    onlineStatus.textContent =
-      "Copie impossible. Note le code affiché.";
+    onlineStatus.textContent = "Copie impossible. Note le code affiché.";
   }
 });
 
@@ -199,3 +212,4 @@ shareInvitationBtn.addEventListener("click", async () => {
     }
   }
 });
+
