@@ -328,3 +328,34 @@ footer { text-align:center; padding:24px 0 6px; }
 #soundToggle:hover {
   box-shadow: 0 0 12px rgba(201, 155, 66, .45);
 }
+
+/* Historique des déplacements */
+.move-history {
+  width: 100%;
+  margin-top: 20px;
+  padding: 15px;
+  border: 1px solid #b88a3b;
+  border-radius: 14px;
+  background: rgba(23, 33, 27, 0.95);
+  color: #f5dfaa;
+  box-sizing: border-box;
+}
+
+.move-history h3 {
+  margin-top: 0;
+  font-size: 17px;
+  color: #e5bd69;
+}
+
+#moveHistoryList {
+  max-height: 220px;
+  overflow-y: auto;
+  padding-left: 25px;
+}
+
+#moveHistoryList li {
+  padding: 8px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid rgba(229, 189, 105, 0.2);
+  font-size: 14px;
+}
