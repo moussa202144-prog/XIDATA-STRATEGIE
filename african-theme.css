@@ -1,0 +1,147 @@
+/* XIDATA STRATÉGIE - Thème jeu de plateau africain traditionnel
+   Bois sculpté, creux ronds, graines d'ébène et d'ivoire, couleurs terre.
+   À charger APRÈS style.css */
+
+:root {
+  --wood-1: #6b3f1d;
+  --wood-2: #8f5a2a;
+  --wood-dark: #3b200d;
+  --ochre: #e0a030;
+  --terracotta: #c4532a;
+  --ivory: #f3e6c8;
+  --ebony: #1c110a;
+}
+
+/* ---------- Fond de page : bois sombre + motif tissé ---------- */
+body {
+  background-color: #1d120a !important;
+  background-image:
+    repeating-linear-gradient(45deg, rgba(224, 160, 48, 0.05) 0 2px, transparent 2px 18px),
+    repeating-linear-gradient(-45deg, rgba(196, 83, 42, 0.05) 0 2px, transparent 2px 18px) !important;
+  color: var(--ivory);
+}
+
+/* ---------- En-tête ---------- */
+.hero { position: relative; padding-bottom: 18px; }
+.hero::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 8px;
+  border-radius: 4px;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--ochre) 0 6px,
+    var(--terracotta) 6px 12px,
+    var(--ebony) 12px 18px
+  );
+}
+.eyebrow,
+.hero h1 span {
+  color: var(--ochre) !important;
+}
+.brand-mark {
+  color: var(--ochre) !important;
+  border-color: var(--ochre) !important;
+}
+
+/* ---------- Cartes et panneaux ---------- */
+.board-panel,
+.status-card,
+.score-card,
+.rules-card,
+.mode-picker,
+.modal-card {
+  background: rgba(45, 26, 12, 0.9) !important;
+  border-color: rgba(224, 160, 48, 0.4) !important;
+}
+
+/* ---------- Boutons ---------- */
+.button {
+  background: var(--ochre) !important;
+  color: #2a1608 !important;
+  border-color: var(--wood-dark) !important;
+}
+.button.secondary {
+  background: #3a2210 !important;
+  color: var(--ivory) !important;
+  border: 1px solid rgba(224, 160, 48, 0.5) !important;
+}
+
+/* ---------- Plateau en bois sculpté ---------- */
+.board {
+  box-sizing: border-box;
+  padding: clamp(10px, 3vw, 18px);
+  gap: clamp(4px, 1.5vw, 8px);
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.08) 0 2px, transparent 2px 9px),
+    linear-gradient(145deg, var(--wood-2), var(--wood-1)) !important;
+  border: 6px solid var(--wood-dark);
+  border-radius: 18px;
+  box-shadow:
+    inset 0 0 0 3px var(--ochre),
+    inset 0 6px 18px rgba(0, 0, 0, 0.5),
+    0 14px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Cases = creux ronds taillés dans le bois (plus de damier) */
+.board .cell,
+.board .cell.light,
+.board .cell.dark {
+  background: radial-gradient(circle at 50% 35%, #4a2810, #1f0f06 78%) !important;
+  border: 0 !important;
+  border-radius: 50% !important;
+  box-shadow:
+    inset 0 5px 10px rgba(0, 0, 0, 0.7),
+    0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* ---------- Pions : graines d'ébène et d'ivoire ---------- */
+.board .stone {
+  box-shadow:
+    0 3px 5px rgba(0, 0, 0, 0.55),
+    inset 0 -3px 5px rgba(0, 0, 0, 0.35),
+    inset 0 3px 5px rgba(255, 255, 255, 0.3) !important;
+}
+.board .stone.black {
+  background: radial-gradient(circle at 35% 30%, #6a4a36, #1c110a 60%, #0b0603) !important;
+}
+.board .stone.white {
+  background: radial-gradient(circle at 35% 30%, #fffaf0, #eadbb6 60%, #b99d68) !important;
+}
+/* Roi : anneau d'or */
+.board .stone.king {
+  outline: 3px solid var(--ochre);
+  outline-offset: -6px;
+}
+
+/* ---------- États du plateau ---------- */
+.board .cell.selected {
+  box-shadow:
+    0 0 0 3px var(--ochre),
+    0 0 16px 4px rgba(224, 160, 48, 0.7),
+    inset 0 5px 10px rgba(0, 0, 0, 0.7) !important;
+}
+.board .cell.destination {
+  box-shadow:
+    0 0 0 3px #7fb069,
+    0 0 14px 3px rgba(127, 176, 105, 0.7),
+    inset 0 5px 10px rgba(0, 0, 0, 0.7) !important;
+}
+.board .cell.capture-destination,
+.board .cell.sanction-candidate {
+  box-shadow:
+    0 0 0 3px #f2c94c,
+    0 0 14px 3px rgba(242, 201, 76, 0.8),
+    inset 0 5px 10px rgba(0, 0, 0, 0.7) !important;
+}
+.board .cell.last-move {
+  outline: 2px dashed rgba(243, 230, 200, 0.7);
+  outline-offset: -3px;
+}
+
+/* ---------- Jauges de score ---------- */
+.meter-black { background: var(--ebony) !important; }
+.meter-white { background: var(--ivory) !important; }
