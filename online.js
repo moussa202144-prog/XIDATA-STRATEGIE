@@ -16,7 +16,69 @@ const shareInvitationBtn = document.querySelector("#shareInvitationBtn");
 
 window.currentRoomCode = null;
 window.currentRoomRole = null;
+// Créer une partie
+function generateRoomCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
 
+createRoomBtn.addEventListener("click", async () => {
+  try {
+    createRoomBtn.disabled = true;
+    onlineStatus.textContent = "Création de la partie...";
+
+    const user = await window.firebaseReady;
+
+    let code = "";
+    let created = false;
+
+    for (let i = 0; i < 5 && !created; i++) {
+      code = generateRoomCode();
+      const result = await window.firebaseDb
+        .ref("rooms/" + code)
+        .transaction(room => {
+          if (room !== null) return; // code déjà pris
+          return {
+            host: user.uid,
+            status: "waiting",
+            createdAt: Date.now()
+          };
+        });
+      created = result.committed;
+    }
+
+    if (!created) throw new Error("Impossible de créer un code, réessaie.");
+
+    window.currentRoomCode = code;
+    window.currentRoomRole = "host";
+
+    invitationCode.textContent = code;
+    invitationArea.hidden = false;
+    onlineStatus.textContent = "Partie créée ! Envoie le code à ton ami.";
+
+    // Attendre que l'invité rejoigne
+    const statusRef = window.firebaseDb.ref("rooms/" + code + "/status");
+    const listener = statusRef.on("value", snap => {
+      if (snap.val() === "playing") {
+        statusRef.off("value", listener);
+        onlineStatus.textContent = "Adversaire connecté !";
+        if (typeof window.startOnlineGame === "function") {
+          window.startOnlineGame();
+        }
+      }
+    });
+
+  } catch (error) {
+    onlineStatus.textContent = "Erreur : " + error.message;
+    console.error(error);
+  } finally {
+    createRoomBtn.disabled = false;
+  }
+});
 // Rejoindre une partie avec un code
 joinRoomBtn.addEventListener("click", async () => {
   try {
