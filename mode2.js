@@ -79,7 +79,9 @@ function loadMode2() {
     bonusPending = data.bonusPending || 0;
     bonusPlayer = data.bonusPlayer ?? null;
     bonusOpponent = data.bonusOpponent ?? null;
-    bonusTimerDuration = data.bonusTimerDuration || 0;
+    bonusTimerDuration = data.
+    previousWinner
+    bonusTimerDuration || 0;
     previousWinner = data.previousWinner ?? null;
 
     selected = null;
@@ -88,7 +90,6 @@ function loadMode2() {
 
     $('#customDifficulty').value = difficulty;
     $('#bonusTimerMode').value = String(bonusTimerDuration);
-    previousWinner
     modal.classList.add('hidden');
 
     if (bonusPending > 0) {
