@@ -88,7 +88,7 @@ function loadMode2() {
 
     $('#customDifficulty').value = difficulty;
     $('#bonusTimerMode').value = String(bonusTimerDuration);
-
+    previousWinner
     modal.classList.add('hidden');
 
     if (bonusPending > 0) {
