@@ -2,13 +2,13 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#17211b">
   <link rel="manifest" href="manifest.json">
-<meta name="description" content="XIDATA STRATÉGIE : jeu de stratégie avec IA et multijoueur en ligne.">
+  <meta name="description" content="XIDATA STRATÉGIE : jeu de stratégie avec IA et multijoueur en ligne.">
   <title>XIDATA STRATÉGIE</title>
   <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="african-theme.css">
+  <link rel="stylesheet" href="african-theme.css">
 </head>
 <body>
   <main class="app">
@@ -23,37 +23,40 @@
 
     <section class="mode-picker">
 
-<section id="onlinePanel" class="mode-picker">
-  <h2>Jouer en ligne</h2>
+      <section id="onlinePanel" class="mode-picker">
+        <h2>Jouer en ligne</h2>
 
-  <button id="createRoomBtn" class="button" type="button">
-    Créer une partie
-  </button>
+        <button id="createRoomBtn" class="button" type="button">
+          Créer une partie
+        </button>
 
-  <div>
-    <label for="roomCode">Code d'invitation</label>
-    <input id="roomCode" type="text" placeholder="Entrer le code">
-    <button id="joinRoomBtn" class="button secondary" type="button">
-      Rejoindre
-    </button>
-  </div>
+        <div>
+          <label for="roomCode">Code d'invitation</label>
+          <input id="roomCode" type="text" placeholder="Entrer le code">
+          <button id="joinRoomBtn" class="button secondary" type="button">
+            Rejoindre
+          </button>
+        </div>
 
-  <div id="invitationArea" hidden>
-    <p>Code : <strong id="invitationCode"></strong></p>
-    <button id="copyInvitationBtn" class="button secondary" type="button">
-      Copier le code
-    </button>
-    <button id="shareInvitationBtn" class="button secondary" type="button">
-      Partager le lien
-    </button>
-  </div>
+        <div id="invitationArea" hidden>
+          <p>Code : <strong id="invitationCode"></strong></p>
+          <button id="copyInvitationBtn" class="button secondary" type="button">
+            Copier le code
+          </button>
+          <button id="shareInvitationBtn" class="button secondary" type="button">
+            Partager le lien
+          </button>
+        </div>
 
-  <p id="onlineStatus">Mode hors ligne</p>
-</section>
+        <p id="onlineStatus">Mode hors ligne</p>
+      </section>
 
       <label for="gameMode">Mode de jeu</label>
       <select id="gameMode" class="mode-select"><option value="classic">Mode 1 — Classique</option><option value="custom">Mode 2 — Personnalisé</option></select>
+
+      <button id="rulesBtn" class="button secondary" type="button">📜 Règles du jeu</button>
     </section>
+
     <section id="classicGame" class="game-layout" aria-label="Jeu classique">
       <div class="board-panel">
         <div class="board-heading">
@@ -98,61 +101,94 @@
           <p class="score-sub">Captures réussies : <span id="whiteCaptures">0</span> / 12</p>
         </section>
 
-        <section class="rules-card">
-          <p class="eyebrow">RÈGLES RAPIDES</p>
-          <ol>
-            <li>Déplacez un pion d'une case vers l'avant, l'arrière, la gauche ou la droite, vers une case vide.</li>
-            <li>Un pion simple capture en sautant par-dessus un pion adverse adjacent vers la case vide juste derrière.</li>
-            <li>Un pion qui atteint la rangée opposée devient un roi, marqué par le symbole ♛.</li>
-            <li>Le roi peut se déplacer sans capture sur plusieurs cases libres, horizontalement ou verticalement. Il peut aussi capturer de près ou de loin en sautant un pion adverse et en atterrissant sur une case vide derrière lui.</li>
-            <li>La capture est obligatoire si elle est possible, mais le maximum de captures n’est pas imposé : vous choisissez librement parmi les captures disponibles. Si vous commencez une chaîne avec ce pion, vous devez la terminer jusqu’à sa destination finale.</li>
-            <li><strong>Sanction :</strong> si vous faites un déplacement normal alors qu'une capture était possible, l'adversaire choisit et retire un pion qui pouvait capturer.</li>
-            <li>Gagnez en capturant les 12 pions adverses ou en bloquant tous les mouvements légaux adverses.</li>
-          </ol>
-        </section>
         <p class="fine-print">Version de test · Deux joueurs ou contre l’IA · Roi à déplacement longue distance · Aucune inscription nécessaire.</p>
       </aside>
     </section>
 
     <section id="customGame" class="custom-game hidden" aria-label="Mode personnalisé">
-    <div class="custom-main">
-      <div class="board-panel">
-        <div class="board-heading"><div><p class="eyebrow">MODE PERSONNALISÉ</p><h2>Plateau 5 × 5</h2></div><button id="customRestart" class="button secondary" type="button">↻ Recommencer</button></div>
-        <p id="bonusTimer" class="bonus-timer">⏳ Temps restant : 30 s</p>
-<div id="customBoard" class="board" role="grid" aria-label="Plateau personnalisé"></div>
-        <p id="customHint" class="board-tip"></p>
-      </div>
-      <aside class="side-panel">
-        <section class="status-card"><p class="eyebrow" id="customPhase">Phase de placement</p><h2 id="customTurn">Placement : Blancs</h2><p id="customStatus" class="status-text" aria-live="polite"></p>
-        <div id="bonusPanel" class="status-card hidden">
-        <strong>Retrait du pion bonus</strong>
-       <p>Choisissez un pion adverse   supplémentaire à retirer.</p>
-        <div id="bonusChoices"></div>
-         </div>
-          <label class="custom-label" for="customOpponent">Adversaire</label><select id="customOpponent" class="mode-select"><option value="human">Deux joueurs sur cet appareil</option><option value="ai">Contre l’ordinateur</option></select><label class="custom-label hidden" id="customDifficultyWrap" for="customDifficulty">Difficulté de l’ordinateur</label><select id="customDifficulty" class="mode-select hidden"><option value="easy">Facile</option><option value="medium" selected>Moyen</option><option value="hard">Difficile</option></select>
-          
-<div id="bonusTimerSettings">
-  <label class="custom-label" for="bonusTimerMode">
-    Temps de choix des pions bonus
-  </label>
-  <select id="bonusTimerMode" class="mode-select">
-    <option value="0" selected>Désactivé</option>
-    <option value="20">20 secondes</option>
-    <option value="30">30 secondes</option>
-    <option value="40">40 secondes</option>
-  </select>
-</div>
+      <div class="custom-main">
+        <div class="board-panel">
+          <div class="board-heading"><div><p class="eyebrow">MODE PERSONNALISÉ</p><h2>Plateau 5 × 5</h2></div><button id="customRestart" class="button secondary" type="button">↻ Recommencer</button></div>
+          <p id="bonusTimer" class="bonus-timer">⏳ Temps restant : 30 s</p>
+          <div id="customBoard" class="board" role="grid" aria-label="Plateau personnalisé"></div>
+          <p id="customHint" class="board-tip"></p>
+        </div>
 
-</div>
-</div>
-        </section>
-        <section class="score-card"><p class="eyebrow">PIONS RESTANTS</p><div class="score-row"><span>Noirs</span><strong id="customBlackCount">12</strong></div><p class="score-sub">Captures : <span id="customBlackCap">0</span></p><div class="score-row"><span>Blancs</span><strong id="customWhiteCount">12</strong></div><p class="score-sub">Captures : <span id="customWhiteCap">0</span></p></section>
-        <section class="rules-card"><p class="eyebrow">RÈGLES DU MODE 2</p><ol><li>Chaque joueur place 12 pions à tour de rôle. La case centrale reste vide.</li><li>Les Noirs commencent après le placement.</li><li>Aucun roi : tous les pions gardent le même mouvement.</li><li>Déplacement d’une case horizontalement ou verticalement vers une case vide.</li><li>Capture en sautant un pion adverse adjacent vers la case libre derrière.</li><li>La capture est facultative. Pour chaque pion capturé, un pion adverse supplémentaire doit être retiré au choix du joueur. L'ordinateur choisit automatiquement.</li><li>Si vous commencez une chaîne de captures avec un pion, vous devez la terminer jusqu’à sa destination finale.</li><li>Gagnez en capturant les 12 pions adverses.</li></ol></section>
-      </aside>
-    </div>
-  </section>
-  <footer>© XIDATA STRATÉGIE · Modes classique et personnalisé</footer>
+        <aside class="side-panel">
+          <section class="status-card">
+            <p class="eyebrow" id="customPhase">Phase de placement</p>
+            <h2 id="customTurn">Placement : Blancs</h2>
+            <p id="customStatus" class="status-text" aria-live="polite"></p>
+
+            <div id="bonusPanel" class="status-card hidden">
+              <strong>Retrait du pion bonus</strong>
+              <p>Choisissez un pion adverse supplémentaire à retirer.</p>
+              <div id="bonusChoices"></div>
+            </div>
+
+            <label class="custom-label" for="customOpponent">Adversaire</label>
+            <select id="customOpponent" class="mode-select"><option value="human">Deux joueurs sur cet appareil</option><option value="ai">Contre l’ordinateur</option></select>
+            <label class="custom-label hidden" id="customDifficultyWrap" for="customDifficulty">Difficulté de l’ordinateur</label>
+            <select id="customDifficulty" class="mode-select hidden"><option value="easy">Facile</option><option value="medium" selected>Moyen</option><option value="hard">Difficile</option></select>
+
+            <div id="bonusTimerSettings">
+              <label class="custom-label" for="bonusTimerMode">
+                Temps de choix des pions bonus
+              </label>
+              <select id="bonusTimerMode" class="mode-select">
+                <option value="0" selected>Désactivé</option>
+                <option value="20">20 secondes</option>
+                <option value="30">30 secondes</option>
+                <option value="40">40 secondes</option>
+              </select>
+            </div>
+          </section>
+
+          <section class="score-card"><p class="eyebrow">PIONS RESTANTS</p><div class="score-row"><span>Noirs</span><strong id="customBlackCount">12</strong></div><p class="score-sub">Captures : <span id="customBlackCap">0</span></p><div class="score-row"><span>Blancs</span><strong id="customWhiteCount">12</strong></div><p class="score-sub">Captures : <span id="customWhiteCap">0</span></p></section>
+        </aside>
+      </div>
+    </section>
+
+    <footer>© XIDATA STRATÉGIE · Modes classique et personnalisé</footer>
   </main>
+
+  <!-- Fenêtre des règles (séparée du plateau) -->
+  <div id="rulesModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
+    <div class="modal-card rules-modal-card">
+      <p class="eyebrow">RÈGLES DU JEU</p>
+      <h2 id="rulesTitle">Comment jouer</h2>
+
+      <section id="rulesClassic" class="rules-card">
+        <p class="eyebrow">MODE 1 — CLASSIQUE</p>
+        <ol>
+          <li>Déplacez un pion d'une case vers l'avant, l'arrière, la gauche ou la droite, vers une case vide.</li>
+          <li>Un pion simple capture en sautant par-dessus un pion adverse adjacent vers la case vide juste derrière.</li>
+          <li>Un pion qui atteint la rangée opposée devient un roi, marqué par le symbole ♛.</li>
+          <li>Le roi peut se déplacer sans capture sur plusieurs cases libres, horizontalement ou verticalement. Il peut aussi capturer de près ou de loin en sautant un pion adverse et en atterrissant sur une case vide derrière lui.</li>
+          <li>La capture est obligatoire si elle est possible, mais le maximum de captures n’est pas imposé : vous choisissez librement parmi les captures disponibles. Si vous commencez une chaîne avec ce pion, vous devez la terminer jusqu’à sa destination finale.</li>
+          <li><strong>Sanction :</strong> si vous faites un déplacement normal alors qu'une capture était possible, l'adversaire choisit et retire un pion qui pouvait capturer.</li>
+          <li>Gagnez en capturant les 12 pions adverses ou en bloquant tous les mouvements légaux adverses.</li>
+        </ol>
+      </section>
+
+      <section id="rulesCustom" class="rules-card hidden">
+        <p class="eyebrow">MODE 2 — PERSONNALISÉ</p>
+        <ol>
+          <li>Chaque joueur place 12 pions à tour de rôle. La case centrale reste vide.</li>
+          <li>Les Noirs commencent après le placement.</li>
+          <li>Aucun roi : tous les pions gardent le même mouvement.</li>
+          <li>Déplacement d’une case horizontalement ou verticalement vers une case vide.</li>
+          <li>Capture en sautant un pion adverse adjacent vers la case libre derrière.</li>
+          <li>La capture est facultative. Pour chaque pion capturé, un pion adverse supplémentaire doit être retiré au choix du joueur. L'ordinateur choisit automatiquement.</li>
+          <li>Si vous commencez une chaîne de captures avec un pion, vous devez la terminer jusqu’à sa destination finale.</li>
+          <li>Gagnez en capturant les 12 pions adverses.</li>
+        </ol>
+      </section>
+
+      <button id="rulesCloseBtn" class="button primary" type="button">Fermer</button>
+    </div>
+  </div>
+
   <div id="endModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="endTitle">
     <div class="modal-card">
       <div class="trophy">★</div>
@@ -171,6 +207,7 @@
       <button id="customPlayAgain" class="button primary" type="button">Nouvelle partie</button>
     </div>
   </div>
+
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
@@ -188,14 +225,41 @@
       const script = document.createElement('script');
       script.src = mode === 'classic' ? 'game.js' : 'mode2.js';
       script.onload = () => {
-  if (window.currentRoomCode && typeof window.startOnlineGame === "function") {
-    window.startOnlineGame();
-  }
-};
-document.body.appendChild(script);
+        if (window.currentRoomCode && typeof window.startOnlineGame === "function") {
+          window.startOnlineGame();
+        }
+      };
+      document.body.appendChild(script);
     }
     modePicker.addEventListener('change', switchMode);
     switchMode();
+  </script>
+  <script>
+    // Fenêtre des règles
+    (function () {
+      const modal = document.querySelector('#rulesModal');
+      const openBtn = document.querySelector('#rulesBtn');
+      const closeBtn = document.querySelector('#rulesCloseBtn');
+
+      function openRules() {
+        const mode = document.querySelector('#gameMode').value;
+        document.querySelector('#rulesClassic').classList.toggle('hidden', mode !== 'classic');
+        document.querySelector('#rulesCustom').classList.toggle('hidden', mode !== 'custom');
+        modal.classList.remove('hidden');
+        closeBtn.focus();
+      }
+      function closeRules() {
+        modal.classList.add('hidden');
+        openBtn.focus();
+      }
+
+      openBtn.addEventListener('click', openRules);
+      closeBtn.addEventListener('click', closeRules);
+      modal.addEventListener('click', e => { if (e.target === modal) closeRules(); });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeRules();
+      });
+    })();
   </script>
   <script>
 if ("serviceWorker" in navigator) {
