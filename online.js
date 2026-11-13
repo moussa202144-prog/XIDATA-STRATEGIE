@@ -1,4 +1,8 @@
+console.log("ONLINE.JS DÉMARRÉ");
 
+console.log("Bouton créer :", document.querySelector("#createRoomBtn"));
+
+console.log("Firebase :", window.firebaseDb);
  // XIDATA STRATEGIE - Salons multijoueurs
 
 const createRoomBtn = document.querySelector("#createRoomBtn");
