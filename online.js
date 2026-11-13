@@ -1,3 +1,5 @@
+const gm = document.querySelector("#gameMode");
+if (gm.value !== "classic") { gm.value = "classic"; gm.dispatchEvent(new Event("change")); }
 console.log("ONLINE.JS DÉMARRÉ");
 
 console.log("Bouton créer :", document.querySelector("#createRoomBtn"));
