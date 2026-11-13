@@ -136,7 +136,7 @@ room.host === user.uid
     });
 
     if (!result.committed) {
-  const check = await roomRef.once("value");
+ const check = await roomRef.once("value");
   const room = check.val();
 
   console.log("DIAGNOSTIC SALON :", {
@@ -162,7 +162,7 @@ room.host === user.uid
     throw new Error("Les deux téléphones utilisent le même compte Firebase.");
   }
 
-  throw new Error("Transaction refusée par Firebase. Vérifier les règles.");
+  throw new Error("Transaction refusée par Firebase. Vérifier les règles."); 
     }
 
     window.currentRoomCode = code;
