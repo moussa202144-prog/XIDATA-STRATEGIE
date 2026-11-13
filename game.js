@@ -1,4 +1,4 @@
- SIZE = 5;
+const SIZE = 5;
 const EMPTY = null;
 const BLACK = "black";
 const WHITE = "white";
