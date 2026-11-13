@@ -6,7 +6,8 @@ console.log("Bouton créer :", document.querySelector("#createRoomBtn"));
 
 console.log("Firebase :", window.firebaseDb);
  // XIDATA STRATEGIE - Salons multijoueurs
-
+const roomParam = new URLSearchParams(location.search).get("room");
+if (roomParam) roomCodeInput.value = roomParam.toUpperCase();
 const createRoomBtn = document.querySelector("#createRoomBtn");
 const joinRoomBtn = document.querySelector("#joinRoomBtn");
 const roomCodeInput = document.querySelector("#roomCode");
