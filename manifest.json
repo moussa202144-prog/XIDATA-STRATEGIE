@@ -59,4 +59,19 @@
     "type": "image/png",
     "purpose": "any"
   }
+]
+,
+"screenshots": [
+  {
+    "src": "screenshots/accueil.png",
+    "sizes": "1080x1920",
+    "type": "image/png",
+    "form_factor": "narrow"
+  },
+  {
+    "src": "screenshots/partie.png",
+    "sizes": "1080x1920",
+    "type": "image/png",
+    "form_factor": "narrow"
+  }
 ]}
