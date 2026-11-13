@@ -645,5 +645,7 @@ for (const [dr, dc] of dirs) {
 
   return ranked[0].m;
   }
+  if (!loadMode2()) {
   reset();
+  }
 })();
