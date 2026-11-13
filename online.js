@@ -105,6 +105,23 @@ joinRoomBtn.addEventListener("click", async () => {
     const roomRef = window.firebaseDb.ref("rooms/" + code);
 
     const result = await roomRef.transaction(room => {
+  if (room === null) {
+    return;
+  }
+
+  if (
+    room.status !== "waiting" ||
+    room.guest != null ||
+    room.host === user.uid
+  ) {
+    return;
+  }
+
+  room.guest = user.uid;
+  room.status = "playing";
+
+  return room;
+});
       if (
         room.status !== "waiting" ||
 room.guest != null ||
