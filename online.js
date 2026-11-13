@@ -24,6 +24,8 @@ joinRoomBtn.addEventListener("click", async () => {
 
     const user = await window.firebaseReady;
     const code = roomCodeInput.value.trim().toUpperCase();
+    console.log("CODE SAISI :", roomCodeInput.value);
+console.log("CODE RÉCUPÉRÉ :", code);
 
     if (!/^[A-Z0-9]{6}$/.test(code)) {
       throw new Error("Le code doit contenir 6 caractères.");
