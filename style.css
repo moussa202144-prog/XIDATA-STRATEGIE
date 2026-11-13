@@ -308,4 +308,23 @@ footer { text-align:center; padding:24px 0 6px; }
     filter: brightness(1);
   }
 }
+#soundToggle {
+  padding: 10px 16px;
+  margin: 10px;
+  border: 1px solid #c99b42;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #263b2c, #17211b);
+  color: #f5d58a;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
 
+#soundToggle:active {
+  transform: scale(.95);
+}
+
+#soundToggle:hover {
+  box-shadow: 0 0 12px rgba(201, 155, 66, .45);
+}
