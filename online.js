@@ -114,3 +114,38 @@ shareInvitationBtn.addEventListener("click", async () => {
     }
   }
 });
+// COPIER LE CODE
+copyInvitationBtn.addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(window.currentRoomCode);
+    onlineStatus.textContent = "Code copié !";
+  } catch (error) {
+    onlineStatus.textContent =
+      "Copie impossible. Note le code affiché.";
+  }
+});
+
+// PARTAGER LE LIEN
+shareInvitationBtn.addEventListener("click", async () => {
+  if (!window.currentRoomCode) return;
+
+  const url = new URL(window.location.href);
+  url.searchParams.set("room", window.currentRoomCode);
+
+  try {
+    if (navigator.share) {
+      await navigator.share({
+        title: "XIDATA STRATÉGIE",
+        text: "Rejoins ma partie !",
+        url: url.toString()
+      });
+    } else {
+      await navigator.clipboard.writeText(url.toString());
+      onlineStatus.textContent = "Lien copié !";
+    }
+  } catch (error) {
+    if (error.name !== "AbortError") {
+      onlineStatus.textContent = "Impossible de partager le lien.";
+    }
+  }
+});
