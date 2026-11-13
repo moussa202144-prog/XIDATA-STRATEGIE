@@ -106,10 +106,9 @@ joinRoomBtn.addEventListener("click", async () => {
 
     const result = await roomRef.transaction(room => {
       if (
-        room === null ||
         room.status !== "waiting" ||
-        room.guest !== null ||
-        room.host === user.uid
+room.guest != null ||
+room.host === user.uid
       ) {
         return;
       }
