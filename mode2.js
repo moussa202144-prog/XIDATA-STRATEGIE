@@ -40,7 +40,74 @@ bonusOpponent = null;
     if(centerNeighbors.some(i=>board[i]===p))return true;
     return allMoves(p).some(m=>m.to===center&&m.cap!==null);
   }
-  function render(){boardEl.innerHTML='';let dest=new Map();if(selected!==null)for(const m of availableMoves(selected))dest.set(m.to,m.cap!==null);board.forEach((p,i)=>{const b=document.createElement('button');b.type='button';b.className='cell '+((row(i)+col(i))%2?'dark':'light');b.setAttribute('aria-label',p===B?'Pion noir':p===W?'Pion blanc':i===center?'Case centrale vide':'Case vide');if(i===selected)b.classList.add('selected');if(dest.has(i))b.classList.add(dest.get(i)?'capture-destination':'destination');if(i===lastMove)b.classList.add('last-move');if(p===B||p===W){let s=document.createElement('span');s.className='stone '+p;b.append(s);}else{let d=document.createElement('span');d.style.cssText='width:10%;height:10%;border-radius:50%;background:rgba(30,50,30,.24)';b.append(d);}b.onclick=()=>click(i);boardEl.append(b);});blackCount.textContent=board.filter(x=>x===B).length;whiteCount.textContent=board.filter(x=>x===W).length;blackCap.textContent=captures[B];whiteCap.textContent=captures[W];turnEl.textContent=phase==='placement'?`Placement : ${name(placing)}`:`Au tour des ${name(turn)}`;$('#customPhase').textContent=phase==='placement'?'Phase de placement':'Phase de jeu';$('#customHint').textContent=phase==='placement'?`Pions à placer — Blancs : ${12-board.filter(x=>x===W).length} · Noirs : ${12-board.filter(x=>x===B).length}`:'Sélectionnez un pion puis une destination verte. Les captures sont en jaune.';}
+  function render(){boardEl.innerHTML='';let dest=new Map();if(selected!==null)for(const m of availableMoves(selected))dest.set(m.to,m.cap!==null);board.forEach((p,i)=>{const b=document.createElement('button');b.type='button';b.className='cell '+((row(i)+col(i))%2?'dark':'light');b.setAttribute('aria-label',p===B?'Pion noir':p===W?'Pion blanc':i===center?'Case centrale vide':'Case vide');if(i===selected)b.classList.add('selected');if(dest.has(i))b.classList.add(dest.get(i)?'capture-destination':'destination');if(i===lastMove)b.classList.add('last-move');if(p===B||p===W){let s=document.createElement('span');s.className='stone '+p;b.append(s);}else{let d=document.createElement('span');d.style.cssText='width:10%;height:10%;border-radius:50%;background:rgba(30,50,30,.24)';b.append(d);}b.onclick=()=>click(i);boardEl.append(b);});blackCount.textContent=board.filter(x=>x===B).length;whiteCount.textContent=board.filter(x=>x===W).length;blackCap.textContent=captures[B];whiteCap.textContent=captures[W];turnEl.textContent=phase==='placement'?`Placement : ${name(placing)}`:`Au tour des ${name(turn)}`;$('#customPhase').textContent=phase==='placement'?'Phase de placement':'Phase de jeu';$('#customHint').textContent=phase==='placement'?`Pions à placer — Blancs : ${12-board.filter(x=>x===W).length} · Noirs : ${12-board.filter(x=>x===B).length}`:'Sélectionnez un pion puis une destination verte. Les captures sont en jaune.';
+  saveMode2();}
+  
+function loadMode2() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return false;
+
+    const data = JSON.parse(raw);
+
+    if (
+      !data ||
+      !Array.isArray(data.board) ||
+      data.board.length !== 25 ||
+      !data.board.every(p => p === B || p === W || p === E) ||
+      !['placement', 'play'].includes(data.phase) ||
+      ![B, W].includes(data.placing) ||
+      ![B, W].includes(data.turn) ||
+      !data.captures ||
+      !Number.isFinite(data.captures[B]) ||
+      !Number.isFinite(data.captures[W])
+    ) {
+      return false;
+    }
+
+    board = data.board;
+    phase = data.phase;
+    placing = data.placing;
+    turn = data.turn;
+    chain = data.chain ?? null;
+    gameOver = false;
+    captures = data.captures;
+    lastMove = data.lastMove ?? null;
+    difficulty = data.difficulty;
+    openingMovePending = !!data.openingMovePending;
+    chainCaptureCount = data.chainCaptureCount || 0;
+    bonusPending = data.bonusPending || 0;
+    bonusPlayer = data.bonusPlayer ?? null;
+    bonusOpponent = data.bonusOpponent ?? null;
+    bonusTimerDuration = data.bonusTimerDuration || 0;
+    previousWinner = data.previousWinner ?? null;
+
+    selected = null;
+    aiBusy = false;
+    bonusTimerLocked = phase === 'play';
+
+    $('#customDifficulty').value = difficulty;
+    $('#bonusTimerMode').value = String(bonusTimerDuration);
+
+    modal.classList.add('hidden');
+
+    if (bonusPending > 0) {
+      $('#bonusPanel')?.classList.remove('hidden');
+      startBonusCountdown();
+      say('Partie restaurée : il reste des pions bonus à retirer.');
+    } else {
+      $('#bonusPanel')?.classList.add('hidden');
+      say('Partie précédente restaurée !');
+    }
+
+    render();
+    return true;
+
+  } catch (error) {
+    console.warn('Restauration impossible :', error);
+    return false;
+  }
+}
 
   
 function click(i) {
