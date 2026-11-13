@@ -270,3 +270,21 @@ footer { text-align:center; padding:24px 0 6px; }
     transition: none !important;
   }
 }
+
+/* Animation des messages du jeu */
+.status-update {
+  animation: xidataStatus .35s ease;
+}
+
+@keyframes xidataStatus {
+  0% {
+    opacity: .35;
+    transform: translateY(5px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
