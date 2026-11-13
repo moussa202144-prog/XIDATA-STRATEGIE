@@ -609,6 +609,7 @@ saveOnlineState();
 }
 function finishGame(winner, message) {
   gameOver = true; previousWinner = winner; currentPlayer = winner; chainPiece = null; chainPlayer = null; selected = null;
+  saveOnlineState();
   setStatus(message); render(); showEnd(`${playerName(winner)} gagnent !`, message);
 }
 function showEnd(title, message) { endTitle.textContent = title; endMessage.textContent = message; endModal.classList.remove("hidden"); }
