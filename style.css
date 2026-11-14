@@ -121,48 +121,6 @@ h1 span { color: var(--accent); }
 .cell.sanction-candidate { cursor: crosshair; }
 .cell.sanction-candidate .stone { filter: drop-shadow(0 0 5px rgba(240, 217, 107, 0.95)); }
 
-/* ---------- Pions (dégradés et taille : african-theme.css) ---------- */
-/* Valeurs identiques à african-theme.css : les pions restent visibles
-   même si le thème est ancien, absent ou pas encore rechargé */
-.stone {
-  display: block;
-  position: relative;
-  width: 76%;
-  height: 76%;
-  border-radius: 50%;
-}
-.stone.black {
-  border: 2px solid #0b0603;
-  background: radial-gradient(circle at 35% 30%, #6a4a36, #1c110a 60%, #0b0603);
-}
-.stone.white {
-  border: 2px solid #b99d68;
-  background: radial-gradient(circle at 35% 30%, #fffaf0, #eadbb6 60%, #b99d68);
-}
-.stone::after {
-  content: "";
-  position: absolute;
-  inset: 22%;
-  border-radius: 50%;
-  border: 1px solid rgba(120, 90, 60, 0.35);
-}
-
-/* Le roi garde la forme du pion : seule une petite couronne apparaît dessus */
-.stone.king::before {
-  content: "♛";
-  position: absolute;
-  z-index: 2;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -54%);
-  color: #d8b84d;
-  font-size: clamp(15px, 3.8vw, 24px);
-  line-height: 1;
-  font-weight: 900;
-  text-shadow: 0 1px 2px #111;
-  pointer-events: none;
-}
-
 /* ---------- Tour, score, règles ---------- */
 .turn-line { display: flex; align-items: center; gap: 10px; }
 .turn-line h2 { font-size: 1.12rem; margin: 0; }
