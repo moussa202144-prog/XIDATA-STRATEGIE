@@ -232,25 +232,41 @@ window.addEventListener("error", function (e) {
   <script>
     const modePicker = document.querySelector('#gameMode');
     let loadedMode = '';
-    function switchMode() {
-      const mode = modePicker.value;
-      document.querySelector('#classicGame').classList.toggle('hidden', mode !== 'classic');
-      document.querySelector('#customGame').classList.toggle('hidden', mode !== 'custom');
-      if (loadedMode === mode) return;
-      loadedMode = mode;
-      const script = document.createElement('script');
-      script.src = mode === 'classic' ? 'game.js' : 'mode2.js';
-console.log("Mode chargé :", mode);
-console.log("Scripts chargés :", [...document.scripts].map(s => s.src));
-      script.onload = () => {
-        if (window.currentRoomCode && typeof window.startOnlineGame === "function") {
-          window.startOnlineGame();
-        }
-      };
-      document.body.appendChild(script);
+    
+function switchMode() {
+  const mode = modePicker.value;
+
+  document.querySelector('#classicGame').classList.toggle('hidden', mode !== 'classic');
+  document.querySelector('#customGame').classList.toggle('hidden', mode !== 'custom');
+
+  if (loadedMode === mode) return;
+
+  loadedMode = mode;
+
+  const oldScript = document.querySelector('#gameModeScript');
+  if (oldScript) oldScript.remove();
+
+  const script = document.createElement('script');
+  script.id = 'gameModeScript';
+  script.src = mode === 'classic' ? 'game.js' : 'mode2.js';
+
+  script.onload = () => {
+    if (window.currentRoomCode && typeof window.startOnlineGame === 'function') {
+      window.startOnlineGame();
     }
-    modePicker.addEventListener('change', switchMode);
-    switchMode();
+  };
+
+  script.onerror = () => {
+    console.error('Erreur de chargement du mode :', mode);
+    loadedMode = null;
+  };
+
+  document.body.appendChild(script);
+}
+
+modePicker.addEventListener('change', switchMode);
+switchMode();
+
   </script>
   <script>
     // Fenêtre des règles
