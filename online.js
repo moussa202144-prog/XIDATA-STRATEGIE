@@ -14,16 +14,17 @@ const shareInvitationBtn = document.querySelector("#shareInvitationBtn");
 
 window.currentRoomCode = null;
 window.currentRoomRole = null;
+window.currentRoomMode = null; // "classic" (Mode 1) ou "custom" (Mode 2)
 
-// Marqueur visible : si tu ne vois pas "v4", c'est l'ancienne version en cache
-onlineStatus.textContent = "Mode hors ligne (v5)";
+// Marqueur visible : si tu ne vois pas "v6", c'est l'ancienne version en cache
+onlineStatus.textContent = "Mode hors ligne (v6)";
 
 // Pré-remplir le code si on arrive par un lien ?room=CODE
 const roomParam = new URLSearchParams(location.search).get("room");
 if (roomParam) roomCodeInput.value = roomParam.toUpperCase();
 
 // Réglages de la recherche automatique
-const QUEUE_PATH = "matchmaking/waiting";
+const queuePath = mode => "matchmaking/waiting_" + mode; // une file par mode de jeu
 const QUEUE_FRESH_MS = 30000;     // une attente plus ancienne est ignorée
 const HEARTBEAT_MS = 10000;       // rafraîchit la présence dans la file
 const SEARCH_TIMEOUT_MS = 90000;  // abandon automatique de la recherche
@@ -91,6 +92,10 @@ async function watchOpponentLeft() {
 }
 
 function applyOnlineLocks() {
+  // Dès qu'un salon existe, le mode ne change plus (sinon les deux joueurs n'auraient pas le même)
+  const modeSelect = document.querySelector("#gameMode");
+  if (modeSelect && window.currentRoomCode) modeSelect.disabled = true;
+
   if (!window.onlineGameStarted) return;
 
   LOCKED_WHILE_ONLINE.forEach(sel => {
@@ -124,13 +129,45 @@ function markOnlineGameStarted() {
 // Ré-applique le verrouillage au cas où un autre code réactive un bouton
 setInterval(applyOnlineLocks, 500);
 
-// Le jeu en ligne n'existe que pour le Mode 1 (Classique)
-function forceClassicMode() {
+// ---------- Mode de jeu (Mode 1 Classique ou Mode 2 Personnalisé) ----------
+function currentMode() {
+  return document.querySelector("#gameMode").value === "custom" ? "custom" : "classic";
+}
+
+// Fonction de synchronisation propre à chaque mode
+function starterFor(mode) {
+  return mode === "custom" ? window.startOnlineGameCustom : window.startOnlineGame;
+}
+
+function waitFor(condition, timeoutMs) {
+  return new Promise(resolve => {
+    const t0 = Date.now();
+    (function check() {
+      if (condition()) return resolve(true);
+      if (Date.now() - t0 > timeoutMs) return resolve(false);
+      setTimeout(check, 100);
+    })();
+  });
+}
+
+// Passe dans le bon mode (si besoin) et attend que son code en ligne soit chargé
+async function ensureModeReady(mode) {
   const gm = document.querySelector("#gameMode");
-  if (gm.value !== "classic") {
-    gm.value = "classic";
+  if (gm.value !== mode) {
+    gm.disabled = false;
+    gm.value = mode;
     gm.dispatchEvent(new Event("change"));
   }
+  const ok = await waitFor(() => typeof starterFor(mode) === "function", 6000);
+  if (!ok) throw new Error("Le mode de jeu n'a pas pu être chargé. Recharge la page.");
+}
+
+function startOnlineByMode(mode) {
+  const start = starterFor(mode);
+  if (typeof start !== "function") {
+    throw new Error("La synchronisation du jeu n'est pas chargée.");
+  }
+  start();
 }
 
 function generateRoomCode() {
@@ -145,7 +182,7 @@ function generateRoomCode() {
 // ---------- Briques communes ----------
 
 // Crée un salon "en attente" et renvoie son code
-async function createRoomRecord(user, quick) {
+async function createRoomRecord(user, quick, mode) {
   for (let i = 0; i < 5; i++) {
     const code = generateRoomCode();
     const result = await window.firebaseDb
@@ -156,7 +193,8 @@ async function createRoomRecord(user, quick) {
           host: user.uid,
           status: "waiting",
           createdAt: Date.now(),
-          quick: !!quick
+          quick: !!quick,
+          mode: mode || "classic"
         };
       });
     if (result.committed) return code;
@@ -168,8 +206,10 @@ async function createRoomRecord(user, quick) {
 async function joinRoom(code, user) {
   const roomRef = window.firebaseDb.ref("rooms/" + code);
 
-  // Charger le salon d'abord : le cache local n'est plus vide
-  await roomRef.once("value");
+  // Charger le salon d'abord (cache local) et lire son mode de jeu
+  const info = (await roomRef.once("value")).val();
+  const mode = info && info.mode === "custom" ? "custom" : "classic";
+  if (info) await ensureModeReady(mode); // passe automatiquement dans le bon mode
 
   const result = await roomRef.transaction(room => {
     if (room === null) return null; // cache vide : Firebase relance avec la vraie valeur
@@ -209,13 +249,9 @@ async function joinRoom(code, user) {
 
   window.currentRoomCode = code;
   window.currentRoomRole = "guest";
+  window.currentRoomMode = mode;
 
-  if (typeof window.startOnlineGame === "function") {
-    window.startOnlineGame();
-  } else {
-    throw new Error("La synchronisation du jeu n'est pas chargée.");
-  }
-
+  startOnlineByMode(mode);
   markOnlineGameStarted();
 }
 
@@ -243,14 +279,16 @@ async function removeRoom(code) {
 createRoomBtn.addEventListener("click", async () => {
   try {
     createRoomBtn.disabled = true;
-    forceClassicMode();
+    const mode = currentMode();
+    await ensureModeReady(mode);
     onlineStatus.textContent = "Création de la partie...";
 
     const user = await window.firebaseReady;
-    const code = await createRoomRecord(user, false);
+    const code = await createRoomRecord(user, false, mode);
 
     window.currentRoomCode = code;
     window.currentRoomRole = "host";
+    window.currentRoomMode = mode;
 
     invitationCode.textContent = code;
     invitationArea.hidden = false;
@@ -258,9 +296,7 @@ createRoomBtn.addEventListener("click", async () => {
 
     waitForGuest(code, () => {
       onlineStatus.textContent = "Adversaire connecté !";
-      if (typeof window.startOnlineGame === "function") {
-        window.startOnlineGame();
-      }
+      startOnlineByMode(mode);
       markOnlineGameStarted();
     });
 
@@ -276,7 +312,6 @@ createRoomBtn.addEventListener("click", async () => {
 joinRoomBtn.addEventListener("click", async () => {
   try {
     joinRoomBtn.disabled = true;
-    forceClassicMode();
 
     const user = await window.firebaseReady;
     const code = roomCodeInput.value.trim().toUpperCase();
@@ -303,6 +338,8 @@ function setBusy(busy) {
   if (window.onlineGameStarted) { applyOnlineLocks(); return; }
   createRoomBtn.disabled = busy;
   joinRoomBtn.disabled = busy;
+  const modeSelect = document.querySelector("#gameMode");
+  if (modeSelect) modeSelect.disabled = busy;
   if (quickMatchBtn) quickMatchBtn.disabled = busy;
   if (cancelQuickBtn) cancelQuickBtn.hidden = !busy;
 }
@@ -316,19 +353,18 @@ function stopSearching() {
 }
 
 // Aucun adversaire pour l'instant : on attend dans la file
-function startWaiting(code) {
-  const queueRef = window.firebaseDb.ref(QUEUE_PATH);
+function startWaiting(code, mode) {
+  const queueRef = window.firebaseDb.ref(queuePath(mode));
 
   window.currentRoomCode = code;
   window.currentRoomRole = "host";
+  window.currentRoomMode = mode;
 
   const stopListening = waitForGuest(code, () => {
     stopSearching();
     setBusy(false);
     onlineStatus.textContent = "Adversaire trouvé ! La partie commence.";
-    if (typeof window.startOnlineGame === "function") {
-      window.startOnlineGame();
-    }
+    startOnlineByMode(mode);
     markOnlineGameStarted();
   });
 
@@ -343,13 +379,14 @@ function startWaiting(code) {
     cancelSearch("Aucun adversaire trouvé. Réessaie, ou joue contre l'IA.");
   }, SEARCH_TIMEOUT_MS);
 
-  searching = { code, stopListening, heartbeat, timeout };
+  searching = { code, mode, stopListening, heartbeat, timeout };
   onlineStatus.textContent = "Recherche d'un adversaire...";
 }
 
 async function cancelSearch(message) {
   if (!searching) return;
   const code = searching.code;
+  const mode = searching.mode;
 
   try {
     const roomRef = window.firebaseDb.ref("rooms/" + code);
@@ -365,9 +402,7 @@ async function cancelSearch(message) {
       stopSearching();
       setBusy(false);
       onlineStatus.textContent = "Adversaire trouvé ! La partie commence.";
-      if (typeof window.startOnlineGame === "function") {
-        window.startOnlineGame();
-      }
+      startOnlineByMode(mode);
       markOnlineGameStarted();
       return;
     }
@@ -376,7 +411,7 @@ async function cancelSearch(message) {
     window.currentRoomCode = null;
     window.currentRoomRole = null;
 
-    await window.firebaseDb.ref(QUEUE_PATH).transaction(entry =>
+    await window.firebaseDb.ref(queuePath(mode)).transaction(entry =>
       entry && entry.code === code ? null : undefined
     );
   } catch (error) {
@@ -398,18 +433,19 @@ async function quickMatch() {
 
   let waiting = false;
   try {
-    forceClassicMode();
+    const mode = currentMode();
     setBusy(true);
+    await ensureModeReady(mode);
     onlineStatus.textContent = "Recherche d'un adversaire...";
 
     const user = await window.firebaseReady;
-    const queueRef = window.firebaseDb.ref(QUEUE_PATH);
+    const queueRef = window.firebaseDb.ref(queuePath(mode));
 
     for (let attempt = 0; attempt < 3; attempt++) {
       await queueRef.once("value"); // amorce le cache local
 
       // 1. Je prépare mon salon (il doit exister avant d'être visible dans la file)
-      const myCode = await createRoomRecord(user, true);
+      const myCode = await createRoomRecord(user, true, mode);
 
       // 2. Je prends la place d'un joueur en attente, sinon j'attends à mon tour
       let matched = null;
@@ -435,7 +471,7 @@ async function quickMatch() {
         }
       }
 
-      startWaiting(myCode);
+      startWaiting(myCode, mode);
       waiting = true;
       return;
     }
