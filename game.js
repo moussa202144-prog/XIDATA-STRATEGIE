@@ -1,4 +1,4 @@
-const SIZE = 5;
+ SIZE = 5;
 const EMPTY = null;
 const BLACK = "black";
 const WHITE = "white";
@@ -325,10 +325,10 @@ function startOnlineGame() {
     currentPlayer = state.currentPlayer;
     captures = state.captures;
     gameOver = state.gameOver;
-    lastMove = state.lastMove ?? null;
-pendingSanction = state.pendingSanction ?? null;
-chainPiece = state.chainPiece ?? null;
-chainPlayer = state.chainPlayer ?? null;
+    lastMove = state.lastMove;
+    pendingSanction = state.pendingSanction;
+    chainPiece = state.chainPiece;
+    chainPlayer = state.chainPlayer;
 
     selected = null;
 
@@ -471,7 +471,7 @@ function promoteIfNeeded(index, player) {
     if (!kings.has(index)) { kings.add(index); setStatus(`Promotion ! Ce pion devient un roi des ${playerName(player).toLowerCase()}.`); }
   }
 }
- 
+
 function commitMove(move) {
   const player = currentPlayer;
   const enemy = opponent(player);
@@ -565,10 +565,15 @@ function commitMove(move) {
           "Capture refusée : un pion pouvant capturer a été retiré automatiquement."
         );
       } else {
-        pendingSanction = { offender: player, beneficiary: enemy, candidates };
-currentPlayer = enemy;
-selected = null;
-saveOnlineState();   // ← après le changement de joueur
+        pendingSanction = {
+          offender: player,
+          beneficiary: enemy,
+          candidates
+        };
+
+        saveOnlineState();
+        currentPlayer = enemy;
+        selected = null;
 
         setStatus(
           "Capture refusée : touchez sur le plateau un pion encadré en jaune pour le retirer."
@@ -609,10 +614,7 @@ saveOnlineState();
 }
 function finishGame(winner, message) {
   gameOver = true; previousWinner = winner; currentPlayer = winner; chainPiece = null; chainPlayer = null; selected = null;
-  saveOnlineState();
-  setStatus(message); render();
-  if (gameOver) showEnd(`${playerName(currentPlayer)} gagnent !`, statusText.textContent);
-  showEnd(`${playerName(winner)} gagnent !`, message);
+  setStatus(message); render(); showEnd(`${playerName(winner)} gagnent !`, message);
 }
 function showEnd(title, message) { endTitle.textContent = title; endMessage.textContent = message; endModal.classList.remove("hidden"); }
 
