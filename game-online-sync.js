@@ -62,6 +62,7 @@ function saveOnlineState() {
     console.error("Synchronisation impossible :", error);
     setOnlineStatus("Erreur de synchronisation : " + error.message);
   }
+window.saveOnlineState = saveOnlineState;
 }
 
 function startOnlineGame() {
