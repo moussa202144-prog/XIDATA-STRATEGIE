@@ -16,7 +16,7 @@ window.currentRoomCode = null;
 window.currentRoomRole = null;
 
 // Marqueur visible : si tu ne vois pas "v4", c'est l'ancienne version en cache
-onlineStatus.textContent = "Mode hors ligne (v4)";
+onlineStatus.textContent = "Mode hors ligne (v5)";
 
 // Pré-remplir le code si on arrive par un lien ?room=CODE
 const roomParam = new URLSearchParams(location.search).get("room");
@@ -28,6 +28,101 @@ const QUEUE_FRESH_MS = 30000;     // une attente plus ancienne est ignorée
 const HEARTBEAT_MS = 10000;       // rafraîchit la présence dans la file
 const SEARCH_TIMEOUT_MS = 90000;  // abandon automatique de la recherche
 let searching = null;
+
+// ---------- VERROUILLAGE PENDANT UNE PARTIE EN LIGNE ----------
+// Une fois la partie commencée : plus de changement de mode, d'IA, de difficulté
+// ni de redémarrage. Seul l'hôte peut relancer, et uniquement après la fin de la partie.
+window.onlineGameStarted = false;
+
+const LOCKED_WHILE_ONLINE = [
+  "#gameMode", "#aiMode", "#classicDifficulty", "#customOpponent",
+  "#customDifficulty", "#bonusTimerMode",
+  "#createRoomBtn", "#joinRoomBtn", "#quickMatchBtn", "#roomCode"
+];
+const RESTART_CONTROLS = ["#restartBtn", "#customRestart", "#playAgainBtn", "#customPlayAgain"];
+let opponentWatcherOn = false;
+
+function isOnlineGameOver() {
+  return ["#endModal", "#customEndModal"].some(sel => {
+    const modal = document.querySelector(sel);
+    return modal && !modal.classList.contains("hidden");
+  });
+}
+
+function ensureLeaveButton() {
+  if (document.querySelector("#leaveRoomBtn")) return;
+  const btn = document.createElement("button");
+  btn.id = "leaveRoomBtn";
+  btn.type = "button";
+  btn.className = "button secondary";
+  btn.textContent = "🚪 Quitter la partie";
+  btn.addEventListener("click", leaveOnlineGame);
+  onlineStatus.insertAdjacentElement("afterend", btn);
+}
+
+async function leaveOnlineGame() {
+  if (!confirm("Quitter la partie en cours ? Ton adversaire sera prévenu.")) return;
+  try {
+    const user = await window.firebaseReady;
+    await window.firebaseDb
+      .ref("rooms/" + window.currentRoomCode + "/leftBy")
+      .set(user.uid);
+  } catch (error) {
+    console.warn("Départ non signalé :", error);
+  }
+  location.href = location.pathname;
+}
+
+async function watchOpponentLeft() {
+  try {
+    const user = await window.firebaseReady;
+    window.firebaseDb
+      .ref("rooms/" + window.currentRoomCode + "/leftBy")
+      .on("value", snap => {
+        const who = snap.val();
+        if (who && who !== user.uid) {
+          onlineStatus.textContent =
+            "Ton adversaire a quitté la partie. Appuie sur « Quitter la partie » pour rejouer.";
+        }
+      });
+  } catch (error) {
+    console.warn(error);
+  }
+}
+
+function applyOnlineLocks() {
+  if (!window.onlineGameStarted) return;
+
+  LOCKED_WHILE_ONLINE.forEach(sel => {
+    const el = document.querySelector(sel);
+    if (el) el.disabled = true;
+  });
+
+  const isHost = window.currentRoomRole === "host";
+  const canRestart = isHost && isOnlineGameOver();
+  RESTART_CONTROLS.forEach(sel => {
+    const el = document.querySelector(sel);
+    if (el) el.disabled = !canRestart;
+  });
+
+  const again = document.querySelector("#playAgainBtn");
+  if (again) again.textContent = isHost ? "Nouvelle partie" : "En attente de l'hôte…";
+
+  document.body.classList.add("online-locked");
+  ensureLeaveButton();
+}
+
+function markOnlineGameStarted() {
+  window.onlineGameStarted = true;
+  applyOnlineLocks();
+  if (!opponentWatcherOn) {
+    opponentWatcherOn = true;
+    watchOpponentLeft();
+  }
+}
+
+// Ré-applique le verrouillage au cas où un autre code réactive un bouton
+setInterval(applyOnlineLocks, 500);
 
 // Le jeu en ligne n'existe que pour le Mode 1 (Classique)
 function forceClassicMode() {
@@ -120,6 +215,8 @@ async function joinRoom(code, user) {
   } else {
     throw new Error("La synchronisation du jeu n'est pas chargée.");
   }
+
+  markOnlineGameStarted();
 }
 
 // Attend qu'un adversaire rejoigne le salon, puis appelle onStart
@@ -164,13 +261,14 @@ createRoomBtn.addEventListener("click", async () => {
       if (typeof window.startOnlineGame === "function") {
         window.startOnlineGame();
       }
+      markOnlineGameStarted();
     });
 
   } catch (error) {
     onlineStatus.textContent = "Erreur : " + error.message;
     console.error(error);
   } finally {
-    createRoomBtn.disabled = false;
+    if (!window.onlineGameStarted) createRoomBtn.disabled = false;
   }
 });
 
@@ -196,12 +294,13 @@ joinRoomBtn.addEventListener("click", async () => {
     onlineStatus.textContent = "Erreur : " + error.message;
     console.error(error);
   } finally {
-    joinRoomBtn.disabled = false;
+    if (!window.onlineGameStarted) joinRoomBtn.disabled = false;
   }
 });
 
 // ---------- RECHERCHE AUTOMATIQUE D'ADVERSAIRE ----------
 function setBusy(busy) {
+  if (window.onlineGameStarted) { applyOnlineLocks(); return; }
   createRoomBtn.disabled = busy;
   joinRoomBtn.disabled = busy;
   if (quickMatchBtn) quickMatchBtn.disabled = busy;
@@ -230,6 +329,7 @@ function startWaiting(code) {
     if (typeof window.startOnlineGame === "function") {
       window.startOnlineGame();
     }
+    markOnlineGameStarted();
   });
 
   // Signale régulièrement qu'on est toujours là
@@ -268,6 +368,7 @@ async function cancelSearch(message) {
       if (typeof window.startOnlineGame === "function") {
         window.startOnlineGame();
       }
+      markOnlineGameStarted();
       return;
     }
 
