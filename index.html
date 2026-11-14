@@ -229,35 +229,37 @@ window.addEventListener("error", function (e) {
 <script src="firebase.js"></script>
 <script src="online.js"></script>
 <script src="game-online-sync.js"></script>
-  <script>
     const modePicker = document.querySelector('#gameMode');
     let loadedMode = '';
     
+const loadedScripts = new Set();
+
 function switchMode() {
   const mode = modePicker.value;
 
   document.querySelector('#classicGame').classList.toggle('hidden', mode !== 'classic');
   document.querySelector('#customGame').classList.toggle('hidden', mode !== 'custom');
 
-  if (loadedMode === mode) return;
+  if (loadedScripts.has(mode)) {
+    loadedMode = mode;
+    return;
+  }
 
   loadedMode = mode;
 
-  const oldScript = document.querySelector('#gameModeScript');
-  if (oldScript) oldScript.remove();
-
   const script = document.createElement('script');
-  script.id = 'gameModeScript';
   script.src = mode === 'classic' ? 'game.js' : 'mode2.js';
 
   script.onload = () => {
+    loadedScripts.add(mode);
+
     if (window.currentRoomCode && typeof window.startOnlineGame === 'function') {
       window.startOnlineGame();
     }
   };
 
   script.onerror = () => {
-    console.error('Erreur de chargement du mode :', mode);
+    console.error('Erreur de chargement :', mode);
     loadedMode = null;
   };
 
