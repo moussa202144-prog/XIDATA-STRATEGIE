@@ -282,25 +282,6 @@ function legalMovesForPlayer(player) {
 
 function setStatus(message) { statusText.textContent = message; }
 
-function saveOnlineState() {
-  if (!window.currentRoomCode || applyingOnlineState) return;
-
-  const state = {
-    board: board,
-    kings: Array.from(kings),
-    currentPlayer: currentPlayer,
-    captures: captures,
-    gameOver: gameOver,
-    lastMove: lastMove,
-    pendingSanction: pendingSanction,
-    chainPiece: chainPiece,
-    chainPlayer: chainPlayer
-  };
-
-  window.firebaseDb
-    .ref("rooms/" + window.currentRoomCode + "/gameState")
-    .set(state);
-}
 
 function render() {
   boardEl.innerHTML = "";
