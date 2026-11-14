@@ -1,9 +1,33 @@
+// XIDATA STRATÉGIE - Service worker
+// Réseau d'abord : la dernière version est toujours demandée au serveur.
+// Hors ligne : les fichiers déjà mémorisés prennent le relais.
 
-const CACHE_NAME = "xidata-strategie-v1";
+// Change ce numéro à chaque grosse mise à jour (l'ancien cache est supprimé)
+const CACHE_NAME = "xidata-strategie-v2";
+
+// Fichiers mémorisés dès l'installation (un fichier absent n'empêche pas l'installation)
+const CORE_FILES = [
+  "./",
+  "./index.html",
+  "./style.css",
+  "./african-theme.css",
+  "./home.css",
+  "./home.js",
+  "./online.js",
+  "./game.js",
+  "./game-online-sync.js",
+  "./mode2.js",
+  "./mode2-online.js",
+  "./sounds.js",
+  "./firebase.js",
+  "./manifest.json"
+];
 
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.add("./"))
+    caches.open(CACHE_NAME).then(cache =>
+      Promise.all(CORE_FILES.map(file => cache.add(file).catch(() => {})))
+    )
   );
   self.skipWaiting();
 });
@@ -31,7 +55,9 @@ self.addEventListener("fetch", event => {
   if (url.origin !== self.location.origin) return;
 
   event.respondWith(
-    fetch(request)
+    // "no-cache" : le navigateur vérifie toujours auprès du serveur
+    // (GitHub Pages garde sinon les fichiers 10 minutes dans son cache)
+    fetch(request, { cache: "no-cache" })
       .then(response => {
         if (response.ok) {
           const copy = response.clone();
@@ -42,7 +68,7 @@ self.addEventListener("fetch", event => {
         return response;
       })
       .catch(async () => {
-        const cached = await caches.match(request);
+        const cached = await caches.match(request, { ignoreSearch: true });
 
         if (cached) return cached;
 
