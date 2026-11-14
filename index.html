@@ -11,11 +11,6 @@
   <link rel="stylesheet" href="african-theme.css">
 </head>
 <body>
-  
-<button id="soundToggle" type="button">
-  🔊 Sons activés
-</button>
-
   <main class="app">
     <header class="hero">
       <div class="brand-mark" aria-hidden="true">X</div>
@@ -65,18 +60,9 @@
     <section id="classicGame" class="game-layout" aria-label="Jeu classique">
       <div class="board-panel">
         <div class="board-heading">
-
           <div>
             <p class="eyebrow">PLATEAU</p>
             <h2>5 × 5</h2>
-            
-<div id="moveHistory" class="move-history">
-  <h3>📜 Historique de la partie</h3>
-  <ul id="moveHistoryList">
-    <li>La partie n'a pas encore commencé.</li>
-  </ul>
-</div>
-
           </div>
           <div class="heading-actions"><label class="mode-toggle"><input id="aiMode" type="checkbox"> Jouer contre l’IA</label><label class="ai-difficulty-wrap hidden" id="classicDifficultyWrap">Difficulté <select id="classicDifficulty" class="mode-select"><option value="easy">Facile</option><option value="medium" selected>Moyen</option><option value="hard">Difficile</option></select></label><button id="restartBtn" class="button secondary" type="button">↻ Recommencer</button></div>
         </div>
@@ -275,6 +261,7 @@
       });
     })();
   </script>
+  <script src="sounds.js"></script>
   <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
