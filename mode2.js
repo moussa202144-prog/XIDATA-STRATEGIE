@@ -508,30 +508,7 @@ function aiPlace() {
   }
 }
 
-function scheduleAI() {
-  if (!aiMode || gameOver || aiBusy) return;
-  if (phase === 'play' && turn !== B) return;
-  if (phase === 'placement' && placing !== B) return;
 
-  aiBusy = true;
-  say('L’ordinateur réfléchit…');
-
-  aiTimer = setTimeout(() => {
-    aiTimer = null;
-    aiBusy = false;
-    if (gameOver) return;
-
-    if (phase === 'placement') { aiPlace(); return; }
-
-    let options = chain !== null
-      ? movesFrom(chain).filter(m => m.cap !== null)
-      : allMoves(B);
-    if (openingMovePending) options = options.filter(m => m.to === center);
-
-    if (!options.length) { finish(W, 'Les Noirs sont bloqués.'); return; }
-    play(chooseMove(options));
-  }, 450);
-}
   
   function choosePlacement(spots) {
   if (!spots.length) return undefined;
