@@ -1,4 +1,4 @@
- SIZE = 5;
+SIZE = 5;
 const EMPTY = null;
 const BLACK = "black";
 const WHITE = "white";
@@ -50,8 +50,8 @@ function directions(i) {
   if (c < SIZE - 1) out.push([0, 1]);
   return out;
 }
-if (window.currentRoomCode && window.currentRoomRole === "guest") { endModal.classList.add("hidden"); setStatus("Seul l'hôte peut lancer une nouvelle partie."); return; }
 function newGame() {
+  if (window.currentRoomCode && window.currentRoomRole === "guest") { endModal.classList.add("hidden"); setStatus("Seul l'hôte peut lancer une nouvelle partie."); return; }
   aiThinking = false;
   board = Array(25).fill(EMPTY);
   for (let i = 0; i < 12; i++) board[i] = BLACK;
