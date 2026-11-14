@@ -11,14 +11,6 @@
   <link rel="stylesheet" href="african-theme.css">
 </head>
 <body>
-<script>
-window.addEventListener("error", function (e) {
-  var d = document.createElement("div");
-  d.style.cssText = "position:fixed;left:0;right:0;top:0;z-index:999;background:#a00;color:#fff;padding:8px;font:12px monospace";
-  d.textContent = "ERREUR : " + e.message + " (" + String(e.filename).split("/").pop() + " ligne " + e.lineno + ")";
-  document.body.appendChild(d);
-});
-</script>
   <main class="app">
     <header class="hero">
       <div class="brand-mark" aria-hidden="true">X</div>
@@ -33,13 +25,15 @@ window.addEventListener("error", function (e) {
 
       <section id="onlinePanel" class="mode-picker">
         <h2>Jouer en ligne</h2>
-<button id="quickMatchBtn" class="button" type="button">
-  ⚡ Trouver un adversaire
-</button>
-<button id="cancelQuickBtn" class="button secondary" type="button" hidden>
-  Annuler la recherche
-</button>
-<p>Ou joue avec un ami grâce à un code :</p>
+
+        <button id="quickMatchBtn" class="button" type="button">
+          ⚡ Trouver un adversaire
+        </button>
+        <button id="cancelQuickBtn" class="button secondary" type="button" hidden>
+          Annuler la recherche
+        </button>
+
+        <p>Ou joue avec un ami grâce à un code :</p>
 
         <button id="createRoomBtn" class="button" type="button">
           Créer une partie
@@ -229,47 +223,22 @@ window.addEventListener("error", function (e) {
 <script src="firebase.js"></script>
 <script src="online.js"></script>
 <script src="game-online-sync.js"></script>
-<script>
+  <script>
     const modePicker = document.querySelector('#gameMode');
-    let loadedMode = '';
-    
-const loadedScripts = new Set();
-
-function switchMode() {
-  const mode = modePicker.value;
-
-  document.querySelector('#classicGame').classList.toggle('hidden', mode !== 'classic');
-  document.querySelector('#customGame').classList.toggle('hidden', mode !== 'custom');
-
-  if (loadedScripts.has(mode)) {
-    loadedMode = mode;
-    return;
-  }
-
-  loadedMode = mode;
-
-  const script = document.createElement('script');
-  script.src = mode === 'classic' ? 'game.js' : 'mode2.js';
-
-  script.onload = () => {
-    loadedScripts.add(mode);
-
-    if (window.currentRoomCode && typeof window.startOnlineGame === 'function') {
-      window.startOnlineGame();
+    const loadedModes = {};
+    function switchMode() {
+      const mode = modePicker.value;
+      document.querySelector('#classicGame').classList.toggle('hidden', mode !== 'classic');
+      document.querySelector('#customGame').classList.toggle('hidden', mode !== 'custom');
+      // Chaque mode n'est chargé qu'une seule fois (sinon ses variables seraient déclarées deux fois)
+      if (loadedModes[mode]) return;
+      loadedModes[mode] = true;
+      const script = document.createElement('script');
+      script.src = mode === 'classic' ? 'game.js' : 'mode2.js';
+      document.body.appendChild(script);
     }
-  };
-
-  script.onerror = () => {
-    console.error('Erreur de chargement :', mode);
-    loadedMode = null;
-  };
-
-  document.body.appendChild(script);
-}
-
-modePicker.addEventListener('change', switchMode);
-switchMode();
-
+    modePicker.addEventListener('change', switchMode);
+    switchMode();
   </script>
   <script>
     // Fenêtre des règles
