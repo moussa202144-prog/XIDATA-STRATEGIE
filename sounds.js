@@ -142,7 +142,7 @@
     if (!getCtx() || !SOUNDS[name]) return;
     try { SOUNDS[name](); } catch (e) { console.error("Son :", e); }
   }
-  window.playSound = play;
+  window.xidataPlaySound = play;
 
   // ---------- Détection des événements sur les plateaux ----------
   function snapshot(boardEl) {
