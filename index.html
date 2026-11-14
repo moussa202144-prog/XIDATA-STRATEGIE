@@ -11,6 +11,14 @@
   <link rel="stylesheet" href="african-theme.css">
 </head>
 <body>
+<script>
+window.addEventListener("error", function (e) {
+  var d = document.createElement("div");
+  d.style.cssText = "position:fixed;left:0;right:0;top:0;z-index:999;background:#a00;color:#fff;padding:8px;font:12px monospace";
+  d.textContent = "ERREUR : " + e.message + " (" + String(e.filename).split("/").pop() + " ligne " + e.lineno + ")";
+  document.body.appendChild(d);
+});
+</script>
   <main class="app">
     <header class="hero">
       <div class="brand-mark" aria-hidden="true">X</div>
