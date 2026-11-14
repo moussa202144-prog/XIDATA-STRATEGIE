@@ -9,7 +9,6 @@ let bonusTimerLocked = false;
   let bonusPending = 0;
 let bonusPlayer = null;
 let bonusOpponent = null;
-  let aiTimer = null;
   const $=s=>document.querySelector(s);
   const boardEl=$('#customBoard'), status=$('#customStatus'), turnEl=$('#customTurn'), blackCount=$('#customBlackCount'), whiteCount=$('#customWhiteCount'), blackCap=$('#customBlackCap'), whiteCap=$('#customWhiteCap'), modal=$('#customEndModal'), modalTitle=$('#customEndTitle'), modalMsg=$('#customEndMessage');
   const other=p=>p===B?W:B, name=p=>p===B?'Noirs':'Blancs', row=i=>Math.floor(i/N), col=i=>i%N, inside=(r,c)=>r>=0&&r<N&&c>=0&&c<N;
@@ -17,7 +16,6 @@ let bonusOpponent = null;
   function say(t){status.textContent=t;}
   function reset(){difficulty=$('#customDifficulty').value;
   bonusTimerLocked = false;
-  if (aiTimer) { clearTimeout(aiTimer); aiTimer = null; }
   $('#bonusTimerMode').disabled = false;
 bonusTimerDuration = Number($('#bonusTimerMode')?.value || 0);
 
@@ -44,7 +42,7 @@ bonusOpponent = null;
   }
   function render(){boardEl.innerHTML='';let dest=new Map();if(selected!==null)for(const m of availableMoves(selected))dest.set(m.to,m.cap!==null);board.forEach((p,i)=>{const b=document.createElement('button');b.type='button';b.className='cell '+((row(i)+col(i))%2?'dark':'light');b.setAttribute('aria-label',p===B?'Pion noir':p===W?'Pion blanc':i===center?'Case centrale vide':'Case vide');if(i===selected)b.classList.add('selected');if(dest.has(i))b.classList.add(dest.get(i)?'capture-destination':'destination');if(i===lastMove)b.classList.add('last-move');if(p===B||p===W){let s=document.createElement('span');s.className='stone '+p;b.append(s);}else{let d=document.createElement('span');d.style.cssText='width:10%;height:10%;border-radius:50%;background:rgba(30,50,30,.24)';b.append(d);}b.onclick=()=>click(i);boardEl.append(b);});blackCount.textContent=board.filter(x=>x===B).length;whiteCount.textContent=board.filter(x=>x===W).length;blackCap.textContent=captures[B];whiteCap.textContent=captures[W];turnEl.textContent=phase==='placement'?`Placement : ${name(placing)}`:`Au tour des ${name(turn)}`;$('#customPhase').textContent=phase==='placement'?'Phase de placement':'Phase de jeu';$('#customHint').textContent=phase==='placement'?`Pions à placer — Blancs : ${12-board.filter(x=>x===W).length} · Noirs : ${12-board.filter(x=>x===B).length}`:'Sélectionnez un pion puis une destination verte. Les captures sont en jaune.';}
 
-  
+
 function click(i) {
   if (gameOver || aiBusy) return;
 
@@ -211,7 +209,7 @@ function click(i) {
   }
 }
 
- 
+
 function play(m) {
   const p = turn;
   const e = other(p);
@@ -259,7 +257,7 @@ function play(m) {
   finishTurn(p, e, 'Déplacement effectué.');
 }
 
-  
+
 function finishTurn(p, next, msg) {
   if (bonusTimerInterval) {
   clearInterval(bonusTimerInterval);
@@ -292,7 +290,7 @@ function finishTurn(p, next, msg) {
   if (aiMode && turn === B) scheduleAI();
 }
 
-  
+
 
 function startBonusCountdown() {
   if (bonusTimerInterval) {
@@ -383,7 +381,7 @@ function startBonusRemoval(count, player) {
 }
 
 
-  
+
 
 function removeBonusAI() {
   if (bonusTimerInterval) {
@@ -427,9 +425,9 @@ function removeBonusAI() {
 }
 
 
-  
+
   function finish(p,msg){gameOver=true;previousWinner=p;turn=p;say(msg);render();modalTitle.textContent=`${name(p)} gagnent !`;modalMsg.textContent=msg;modal.classList.remove('hidden');}
-  
+
 function lockBonusTimerSettings() {
   bonusTimerLocked = true;
 
@@ -438,78 +436,13 @@ function lockBonusTimerSettings() {
     setting.disabled = true;
   }
 }
-function pickAIPlacement() {
-  let spots = board.map((x, i) => (x === E && i !== center ? i : -1)).filter(i => i >= 0);
-  if (!spots.length) return undefined;
 
-  const nB = board.filter(x => x === B).length;
-  const nW = board.filter(x => x === W).length;
-
-  if (turn === B) {
-    // Dernier pion Noir : filtrer, mais ne jamais rester sans case
-    if (nB === 11) {
-      const ok = spots.filter(i => {
-        board[i] = B;
-        const r = hasCenterOpeningMove(B);
-        board[i] = E;
-        return r;
-      });
-      if (ok.length) spots = ok;
-    }
-    // Avant-dernier pion Noir : choisir la case qui laisse le plus de chances
-    else if (nB === 10 && nW === 11) {
-      let best = -1, bestSpots = spots;
-      for (const s of spots) {
-        board[s] = B;
-        const rest = board.map((x, i) => (x === E && i !== center ? i : -1)).filter(i => i >= 0);
-        let good = 0;
-        for (const w of rest) {
-          const o = rest.find(k => k !== w);
-          board[w] = W; board[o] = B;
-          if (hasCenterOpeningMove(B)) good++;
-          board[w] = E; board[o] = E;
-        }
-        board[s] = E;
-        if (good > best) { best = good; bestSpots = [s]; }
-        else if (good === best) bestSpots.push(s);
-      }
-      if (best > 0) spots = bestSpots;
-    }
-  }
-  return choosePlacement(spots);
-}
-
-function aiPlace() {
-  const i = pickAIPlacement();
-  if (i === undefined) return;
-
-  board[i] = B;
-  const nB = board.filter(x => x === B).length;
-  const nW = board.filter(x => x === W).length;
-
-  if (nB === 12 && nW === 12) {
-    phase = 'play';
-    lockBonusTimerSettings();
-    openingMovePending = true;
-    say(`Placement terminé. Les ${name(turn)} commencent.`);
-  } else {
-    placing = W;
-    say(`Noirs : pion ${nB}/12 placé. À Blancs de placer un pion.`);
-  }
-
-  render();
-
-  if (phase === 'play') {
-    if (!hasCenterOpeningMove(turn)) {
-      finish(other(turn), `Les ${name(turn)} ont perdu : aucun déplacement ni aucune capture vers la case centrale n’est possible.`);
-    } else if (turn === B) {
-      scheduleAI();
-    }
-  }
-}
-
-
-  
+  function scheduleAI(){if(!aiMode||gameOver||aiBusy||turn!==B&&phase==='play'||placing!==B&&phase==='placement')return;aiBusy=true;say('L’ordinateur réfléchit…');setTimeout(()=>{aiBusy=false;if(gameOver)return;if(phase==='placement'){let spots=board.map((x,i)=>x===E&&i!==center?i:-1).filter(i=>i>=0);const starter=turn;const starterCountNow=board.filter(x=>x===starter).length;if(starter===B&&starterCountNow===11)spots=spots.filter(i=>{board[i]=B;const ok=hasCenterOpeningMove();board[i]=E;return ok;});let i=choosePlacement(spots);if(i!==undefined){board[i]=B;let n=board.filter(x=>x===B).length;if(board.filter(x=>x===B).length===12&&board.filter(x=>x===W).length===12){
+  phase='play';
+lockBonusTimerSettings();
+openingMovePending=true;say(`Placement terminé. Les ${name(turn)} commencent.`);}else{placing=W;say(`Noirs : pion ${n}/12 placé. À Blancs de placer un pion.`);}render();if(phase==='play'&&!hasCenterOpeningMove(turn))finish(other(turn),`Les ${name(turn)} ont perdu : aucun déplacement ni aucune capture vers la case centrale n’est possible.`);else if(phase==='play'){openingMovePending=true;if(turn===B)scheduleAI();}}return;}let options=chain!==null?movesFrom(chain).filter(m=>m.cap!==null):allMoves(B);if(openingMovePending)options=options.filter(m=>m.to===center);if(!options.length){finish(W,'Les Noirs sont bloqués.');return;}let m=chooseMove(options);play(m);},450);}
+  $('#customRestart').onclick=reset;$('#customPlayAgain').onclick=reset;$('#customOpponent').onchange=e=>{aiMode=e.target.value==='ai';$('#customDifficultyWrap').classList.toggle('hidden',!aiMode);$('#customDifficulty').classList.toggle('hidden',!aiMode);reset();};$('#customDifficulty').onchange=reset;
+  $('#bonusTimerMode').onchange = reset;
   function choosePlacement(spots) {
   if (!spots.length) return undefined;
 
