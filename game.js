@@ -50,6 +50,7 @@ function directions(i) {
   if (c < SIZE - 1) out.push([0, 1]);
   return out;
 }
+if (window.currentRoomCode && window.currentRoomRole === "guest") { endModal.classList.add("hidden"); setStatus("Seul l'hôte peut lancer une nouvelle partie."); return; }
 function newGame() {
   aiThinking = false;
   board = Array(25).fill(EMPTY);
@@ -554,7 +555,7 @@ saveOnlineState();
 }
 function finishGame(winner, message) {
   gameOver = true; previousWinner = winner; currentPlayer = winner; chainPiece = null; chainPlayer = null; selected = null;
-  setStatus(message); render(); showEnd(`${playerName(winner)} gagnent !`, message);
+  setStatus(message); render(); saveOnlineState(); showEnd(`${playerName(winner)} gagnent !`, message);
 }
 function showEnd(title, message) { endTitle.textContent = title; endMessage.textContent = message; endModal.classList.remove("hidden"); }
 
