@@ -359,3 +359,20 @@ footer { text-align: center; margin-top: 24px; }
 }
 .turn-stone.white::after,
 .mini-stone.white::after { background: var(--terracotta); }
+
+
+/* =====================================================
+   VERROUILLAGE EN LIGNE : commandes grisées pendant une partie
+   ===================================================== */
+.button:disabled,
+.mode-select:disabled,
+input:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.4);
+}
+.mode-toggle:has(input:disabled) {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+#leaveRoomBtn { margin-top: 8px; }
