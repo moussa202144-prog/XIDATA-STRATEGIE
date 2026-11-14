@@ -62,7 +62,6 @@ function saveOnlineState() {
     console.error("Synchronisation impossible :", error);
     setOnlineStatus("Erreur de synchronisation : " + error.message);
   }
-window.saveOnlineState = saveOnlineState;
 }
 
 function startOnlineGame() {
@@ -110,6 +109,7 @@ function startOnlineGame() {
       chainPiece = state.chainPiece ?? null;
       chainPlayer = state.chainPlayer ?? null;
       selected = null;
+      if (gameOver) previousWinner = currentPlayer; // le gagnant commence la partie suivante
 
       render();
     } finally {
