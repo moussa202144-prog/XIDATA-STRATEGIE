@@ -154,137 +154,124 @@ body {
 .meter-black { background: var(--ebony) !important; }
 .meter-white { background: var(--ivory) !important; }
 
-/* ==========================================
-   XIDATA STRATEGIE - AFRICAN DYNAMIC THEME
-   ========================================== */
 
-/* Reflets dorés sur les panneaux */
-.board-panel,
-.status-card,
-.score-card,
-.rules-card,
-.mode-picker {
-  box-shadow:
-    0 8px 25px rgba(0,0,0,.28),
-    inset 0 1px 0 rgba(224,160,48,.12);
-  transition: box-shadow .3s ease, border-color .3s ease;
+/* =====================================================
+   RESPONSIVE : plateau bien cadré sur smartphone,
+   tablette et ordinateur
+   ===================================================== */
+html { -webkit-text-size-adjust: 100%; }
+* { -webkit-tap-highlight-color: transparent; }
+.hidden { display: none !important; }
+
+/* Conteneur centré, avec marges de sécurité (encoches) */
+.app {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding-top: max(12px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  padding-left: max(clamp(12px, 3vw, 28px), env(safe-area-inset-left));
+  padding-right: max(clamp(12px, 3vw, 28px), env(safe-area-inset-right));
 }
 
-/* Plateau : finition bois */
+/* En-tête */
+.hero { display: flex; align-items: center; gap: 14px; }
+.hero h1 {
+  font-size: clamp(1.7rem, 7vw, 2.8rem);
+  line-height: 1.05;
+  margin: 0;
+}
+.subtitle { font-size: clamp(0.9rem, 3.2vw, 1.05rem); }
+.brand-mark {
+  flex: 0 0 auto;
+  width: clamp(48px, 12vw, 72px);
+  height: clamp(48px, 12vw, 72px);
+  display: grid;
+  place-items: center;
+}
+
+/* Mise en page : 1 colonne (téléphone), 2 colonnes (tablette large / PC) */
+.game-layout,
+.custom-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (min-width: 900px) {
+  .game-layout,
+  .custom-main {
+    grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+  }
+}
+.board-panel {
+  min-width: 0;
+  box-sizing: border-box;
+  padding: clamp(10px, 2.5vw, 22px);
+}
+.side-panel { display: grid; gap: 14px; min-width: 0; }
+
+/* Plateau carré, toujours entier à l'écran */
 .board {
-  position: relative;
-  isolation: isolate;
-  transition: box-shadow .35s ease;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  aspect-ratio: 1 / 1;
+  width: min(100%, 640px);
+  width: min(100%, 640px, max(280px, calc(100dvh - 240px)));
+  margin: 0 auto;
+  touch-action: manipulation;
 }
-
-.board:hover {
-  box-shadow:
-    inset 0 0 0 3px rgba(224,160,48,.5),
-    inset 0 8px 22px rgba(0,0,0,.55),
-    0 0 25px rgba(224,160,48,.18),
-    0 14px 30px rgba(0,0,0,.5);
-}
-
-/* Cases : profondeur et relief */
 .board .cell {
-  transition:
-    filter .2s ease,
-    transform .2s ease,
-    box-shadow .2s ease;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  touch-action: manipulation;
 }
-
-.board .cell:active {
-  filter: brightness(1.3);
-  transform: scale(.95);
-}
-
-/* Pions : effet de graines polies */
 .board .stone {
-  transition:
-    transform .22s ease,
-    filter .22s ease,
-    box-shadow .22s ease;
+  width: 76%;
+  height: 76%;
+  border-radius: 50%;
+}
+@media (max-width: 420px) {
+  .board { padding: 8px; gap: 4px; border-width: 4px; }
 }
 
-.board .cell:hover .stone {
-  filter: brightness(1.12);
-  transform: translateY(-2px);
+/* En-tête du plateau et actions */
+.board-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px 14px;
+  margin-bottom: 12px;
 }
+.heading-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.board-tip { text-align: center; font-size: 0.9rem; }
 
-/* Pions royaux */
-.board .stone.king {
-  outline: 3px solid var(--ochre);
-  box-shadow:
-    0 0 10px rgba(224,160,48,.4),
-    0 3px 5px rgba(0,0,0,.55) !important;
-}
+/* Formulaires (16px évite le zoom automatique sur iPhone) */
+.mode-picker { box-sizing: border-box; max-width: 100%; }
+#roomCode { width: 100%; max-width: 340px; box-sizing: border-box; font-size: 16px; }
+.mode-select { max-width: 100%; box-sizing: border-box; font-size: 16px; }
+.mode-picker > .mode-select { width: 100%; }
 
-/* Boutons : finition dorée */
-.button,
-.mode-toggle {
-  transition:
-    transform .2s ease,
-    filter .2s ease,
-    box-shadow .2s ease;
-}
+footer { text-align: center; margin-top: 24px; }
 
-.button:hover,
-.mode-toggle:hover {
-  filter: brightness(1.15);
-  box-shadow: 0 0 15px rgba(224,160,48,.25);
-}
-
-.button:active,
-.mode-toggle:active {
-  transform: scale(.96);
-}
-
-/* Sélection : halo doré */
-.board .cell.selected {
-  animation: xidataGold 1.5s ease-in-out infinite;
-}
-
-@keyframes xidataGold {
-  0%, 100% {
-    filter: brightness(1);
-  }
-  50% {
-    filter: brightness(1.3);
-  }
-}
-
-/* Cases disponibles */
-.board .cell.destination {
-  animation: xidataGreen 1.5s ease-in-out infinite;
-}
-
-@keyframes xidataGreen {
-  0%, 100% {
-    filter: brightness(1);
-  }
-  50% {
-    filter: brightness(1.25);
-  }
-}
-
-/* Barre décorative de l'en-tête */
-.hero::after {
-  background-size: 36px 36px;
-  box-shadow: 0 2px 10px rgba(224,160,48,.25);
-}
-
-/* Fenêtre de victoire */
+/* Fenêtres (règles, fin de partie) : jamais plus grandes que l'écran */
+.modal { padding: 12px; box-sizing: border-box; overflow: auto; }
 .modal-card {
-  box-shadow:
-    0 20px 80px rgba(0,0,0,.6),
-    0 0 25px rgba(224,160,48,.15);
+  width: min(92vw, 560px);
+  max-height: 90vh;
+  max-height: 90dvh;
+  overflow: auto;
+  box-sizing: border-box;
 }
-
-/* Accessibilité : animations réduites si demandé */
-@media (prefers-reduced-motion: reduce) {
-  .board .cell.selected,
-  .board .cell.destination {
-    animation: none !important;
-  }
-}
-
+.rules-modal-card { width: min(94vw, 680px); text-align: left; }
+.rules-modal-card .rules-card { margin: 0 0 14px; background: transparent !important; border: 0 !important; padding: 0; }
+.rules-modal-card ol { padding-left: 1.2em; line-height: 1.5; }
