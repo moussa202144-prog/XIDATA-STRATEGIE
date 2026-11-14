@@ -302,44 +302,6 @@ function saveOnlineState() {
     .set(state);
 }
 
-function startOnlineGame() {
-  if (!window.currentRoomCode) return;
-
-  const roomRef = window.firebaseDb
-    .ref("rooms/" + window.currentRoomCode + "/gameState");
-
-  roomRef.on("value", (snapshot) => {
-    const state = snapshot.val();
-
-    if (!state) {
-      if (window.currentRoomRole === "host") {
-        saveOnlineState();
-      }
-      return;
-    }
-
-    applyingOnlineState = true;
-
-    board = Array.from({ length: 25 }, (_, i) => state.board?.[i] ?? EMPTY);
-    kings = new Set(state.kings || []);
-    currentPlayer = state.currentPlayer;
-    captures = state.captures;
-    gameOver = state.gameOver;
-    lastMove = state.lastMove;
-    pendingSanction = state.pendingSanction;
-    chainPiece = state.chainPiece;
-    chainPlayer = state.chainPlayer;
-
-    selected = null;
-
-    render();
-
-    applyingOnlineState = false;
-  });
-}
-window.startOnlineGame = startOnlineGame;
-
-
 function render() {
   boardEl.innerHTML = "";
 
