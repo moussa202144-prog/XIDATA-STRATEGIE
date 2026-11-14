@@ -508,13 +508,10 @@ function commitMove(move) {
           "Capture refusée : un pion pouvant capturer a été retiré automatiquement."
         );
       } else {
-        pendingSanction = {
-          offender: player,
-          beneficiary: enemy,
-          candidates
-        };
-
-        saveOnlineState();
+        pendingSanction = { offender: player, beneficiary: enemy, candidates };
+currentPlayer = enemy;
+selected = null;
+saveOnlineState();
         currentPlayer = enemy;
         selected = null;
 
