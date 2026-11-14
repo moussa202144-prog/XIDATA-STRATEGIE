@@ -6,7 +6,7 @@
   const $$ = s => Array.from(document.querySelectorAll(s));
   const MODE_NAMES = { classic: "Mode 1 · Classique", custom: "Mode 2 · Personnalisé" };
 
-  let mode = "classic";
+  let mode = "classic"
 
   function waitFor(condition, timeoutMs) {
     return new Promise(resolve => {
