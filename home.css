@@ -244,3 +244,4 @@ body:not([data-view="game"]) .sound-toggle { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .home-art .float { animation: none; }
   .home-btn { transition: none; }
+}
