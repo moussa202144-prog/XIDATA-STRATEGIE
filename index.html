@@ -151,7 +151,6 @@
       <button class="icon-btn" type="button" data-open-rules aria-label="Règles du jeu">📜</button>
     </div>
     <p id="gameBanner" class="game-banner" hidden></p>
-    <div id="turnIndicator" class="turn-indicator" role="img" aria-label="Pion du joueur dont c'est le tour"><span id="turnDot" class="turn-stone white"></span></div>
 
     <section id="classicGame" class="game-layout" aria-label="Jeu classique">
       <div class="board-panel">
@@ -357,6 +356,7 @@
   </script>
   <script src="sounds.js"></script>
   <script src="home.js"></script>
+  <script src="stats.js"></script>
   <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
