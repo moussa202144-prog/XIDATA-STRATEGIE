@@ -191,6 +191,23 @@
   }
   setInterval(syncBanner, 700);
 
+  // ---------- Pion indicateur : à qui le tour (sans aucun texte) ----------
+  function syncTurn() {
+    const dot = $("#turnDot");
+    if (!dot) return;
+    let color = "white";
+    if (mode === "classic") {
+      const stone = $("#turnStone");
+      if (stone && stone.classList.contains("black")) color = "black";
+    } else {
+      const label = $("#customTurn");
+      if (label && /noir/i.test(label.textContent)) color = "black";
+    }
+    const next = "turn-stone " + color;
+    if (dot.className !== next) dot.className = next;
+  }
+  setInterval(syncTurn, 250);
+
   // ---------- Démarrage ----------
   setMode("classic");
   // Lien d'invitation (?room=CODE) : on ouvre directement l'écran "Jeu en ligne"
