@@ -19,6 +19,7 @@ const CORE_FILES = [
   "./mode2.js",
   "./mode2-online.js",
   "./sounds.js",
+  "./stats.js",
   "./firebase.js",
   "./manifest.json"
 ];
