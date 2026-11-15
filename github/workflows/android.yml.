@@ -1,8 +1,0 @@
-      - name: Verifier la configuration Capacitor
-        run: |
-          ls -la
-          cat capacitor.config.json
-          npx cap config
-
-      - name: Creer le projet Android
-        run: npx cap add android
