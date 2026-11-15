@@ -1,0 +1,47 @@
+{
+  "rules": {
+    "rooms": {
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null && (!data.exists() || data.child('host').val() === auth.uid || data.child('guest').val() === auth.uid || (data.child('status').val() === 'waiting' && !data.child('guest').exists()))"
+      }
+    },
+    "matchmaking": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "stats": {
+      "totals": {
+        ".read": "auth != null",
+        "$counter": {
+          ".write": "auth != null",
+          ".validate": "newData.isNumber()"
+        }
+      },
+      "daily": {
+        ".read": "auth != null",
+        "$date": {
+          "$counter": {
+            ".write": "auth != null",
+            ".validate": "newData.isNumber()"
+          }
+        }
+      },
+      "presence": {
+        ".read": "auth != null",
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid"
+        }
+      },
+      "players": {
+        "$uid": {
+          ".read": false,
+          "$field": {
+            ".write": "auth != null && auth.uid === $uid && ($field !== 'first' || !data.exists())",
+            ".validate": "newData.isNumber()"
+          }
+        }
+      }
+    }
+  }
+}
