@@ -1,0 +1,2 @@
+      - name: Creer le projet Android
+        run: npx cap add android --app-id com.xidata.strategie --app-name "XIDATA STRATÉGIE"
