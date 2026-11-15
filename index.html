@@ -9,62 +9,148 @@
   <title>XIDATA STRATÉGIE</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="african-theme.css">
+  <link rel="stylesheet" href="home.css">
 </head>
-<body>
-  <main class="app">
-    <header class="hero">
+<body data-view="home">
+  <!-- ===== ACCUEIL ===== -->
+  <section id="homeScreen" class="screen home" aria-label="Accueil">
+    <header class="home-title">
       <div class="brand-mark" aria-hidden="true">X</div>
-      <div>
-        <p class="eyebrow">JEU DE STRATÉGIE · 2 JOUEURS</p>
-        <h1>XIDATA <span>STRATÉGIE</span></h1>
-        <p class="subtitle">Une case libre. Deux joueurs. Chaque décision compte.</p>
-      </div>
+      <p class="eyebrow">JEU DE STRATÉGIE · 2 JOUEURS</p>
+      <h1>XIDATA <span>STRATÉGIE</span></h1>
+      <p class="subtitle">Une case libre. Deux joueurs. Chaque décision compte.</p>
     </header>
 
-    <section class="mode-picker">
+    <div class="home-art" aria-hidden="true">
+      <svg viewBox="0 0 320 230" focusable="false">
+        <defs>
+          <linearGradient id="hTop" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b9743a"/><stop offset="1" stop-color="#7b4521"/></linearGradient>
+          <radialGradient id="hHole" cx="50%" cy="35%" r="70%"><stop offset="0" stop-color="#4a2810"/><stop offset="1" stop-color="#1f0f06"/></radialGradient>
+          <radialGradient id="hEbony" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#7a5238"/><stop offset=".55" stop-color="#2a170b"/><stop offset="1" stop-color="#0b0603"/></radialGradient>
+          <radialGradient id="hIvory" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#fffaf0"/><stop offset=".6" stop-color="#eadbb6"/><stop offset="1" stop-color="#b99d68"/></radialGradient>
+          <g id="pEbony">
+            <ellipse cx="0" cy="8" rx="20" ry="10" fill="#0b0603"/>
+            <rect x="-20" y="0" width="40" height="8" fill="#150b05"/>
+            <ellipse cx="0" cy="0" rx="20" ry="10" fill="url(#hEbony)" stroke="#0b0603" stroke-width="1.5"/>
+            <ellipse cx="0" cy="0" rx="14" ry="6.6" fill="none" stroke="#e0a030" stroke-width="1.8" stroke-dasharray="1 4" stroke-linecap="round"/>
+            <path d="M0 -4 L4 0 L0 4 L-4 0 Z" fill="#e0a030"/>
+          </g>
+          <g id="pIvory">
+            <ellipse cx="0" cy="8" rx="20" ry="10" fill="#9a7f4c"/>
+            <rect x="-20" y="0" width="40" height="8" fill="#cdb98c"/>
+            <ellipse cx="0" cy="0" rx="20" ry="10" fill="url(#hIvory)" stroke="#8f7440" stroke-width="1.5"/>
+            <ellipse cx="0" cy="0" rx="14" ry="6.6" fill="none" stroke="#c4532a" stroke-width="1.8" stroke-dasharray="1 4" stroke-linecap="round"/>
+            <path d="M0 -4 L4 0 L0 4 L-4 0 Z" fill="#c4532a"/>
+          </g>
+          <g id="pKing">
+            <use href="#pIvory"/>
+            <path d="M-9 4 L-7 -9 L-3 -2 L0 -11 L3 -2 L7 -9 L9 4 Z" fill="#c98a12" stroke="#7a4b0c" stroke-width="1"/>
+          </g>
+        </defs>
 
-      <section id="onlinePanel" class="mode-picker">
-        <h2>Jouer en ligne</h2>
+        <polygon points="30,150 160,205 160,222 30,167" fill="#4a2810"/>
+        <polygon points="160,205 290,150 290,167 160,222" fill="#35190a"/>
+        <polygon points="160,95 290,150 160,205 30,150" fill="url(#hTop)" stroke="#3b200d" stroke-width="3" stroke-linejoin="round"/>
+        <g fill="url(#hHole)">
+          <ellipse cx="160" cy="110" rx="17" ry="9"/><ellipse cx="122" cy="130" rx="17" ry="9"/><ellipse cx="198" cy="130" rx="17" ry="9"/>
+          <ellipse cx="84" cy="150" rx="17" ry="9"/><ellipse cx="160" cy="150" rx="17" ry="9"/><ellipse cx="236" cy="150" rx="17" ry="9"/>
+          <ellipse cx="122" cy="170" rx="17" ry="9"/><ellipse cx="198" cy="170" rx="17" ry="9"/><ellipse cx="160" cy="190" rx="17" ry="9"/>
+        </g>
+        <use href="#pEbony" x="122" y="124"/>
+        <use href="#pIvory" x="198" y="164"/>
+        <ellipse cx="160" cy="112" rx="24" ry="6" fill="rgba(0,0,0,.28)"/>
+        <g class="float"><use href="#pKing" transform="translate(160 56) scale(1.5)"/></g>
+      </svg>
+    </div>
 
-        <button id="quickMatchBtn" class="button" type="button">
-          ⚡ Trouver un adversaire
+    <div class="mode-switch" role="group" aria-label="Mode de jeu">
+      <button type="button" data-mode="classic" class="active" aria-pressed="true">Mode 1 · Classique</button>
+      <button type="button" data-mode="custom" aria-pressed="false">Mode 2 · Personnalisé</button>
+    </div>
+
+    <nav class="home-buttons" aria-label="Choisir une partie">
+      <button id="homeOnlineBtn" class="home-btn primary" type="button"><span class="ico" aria-hidden="true">🌍</span>Jeu en ligne</button>
+      <button id="homeAiBtn" class="home-btn" type="button"><span class="ico" aria-hidden="true">🤖</span>Jouer contre l'ordinateur</button>
+      <button id="homeLocalBtn" class="home-btn" type="button"><span class="ico" aria-hidden="true">👥</span>Deux joueurs · même appareil</button>
+    </nav>
+
+    <div class="home-bottom">
+      <button type="button" data-open-rules><span class="ico" aria-hidden="true">📜</span>Règles</button>
+      <button id="homeSoundBtn" type="button"><span id="homeSoundIcon" class="ico" aria-hidden="true">🔊</span>Son</button>
+      <button id="homeShareBtn" type="button"><span class="ico" aria-hidden="true">📤</span>Inviter</button>
+    </div>
+
+    <!-- Le mode de jeu reste géré par ce sélecteur (utilisé par le jeu et le jeu en ligne) -->
+    <select id="gameMode" class="mode-select" hidden><option value="classic">Mode 1 — Classique</option><option value="custom">Mode 2 — Personnalisé</option></select>
+  </section>
+
+  <!-- Choix du niveau de l'ordinateur -->
+  <div id="aiSheet" class="sheet" hidden>
+    <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="aiSheetTitle">
+      <h2 id="aiSheetTitle">Niveau de l'ordinateur</h2>
+      <button class="home-btn" type="button" data-level="easy">🌱 Facile</button>
+      <button class="home-btn" type="button" data-level="medium">🔥 Moyen</button>
+      <button class="home-btn" type="button" data-level="hard">🦁 Difficile</button>
+      <button id="aiSheetCancel" class="button secondary" type="button">Annuler</button>
+    </div>
+  </div>
+
+  <!-- ===== JEU EN LIGNE ===== -->
+  <section id="onlineScreen" class="screen" aria-label="Jeu en ligne">
+    <div class="screen-top">
+      <button id="onlineBackBtn" class="icon-btn" type="button" aria-label="Retour à l'accueil">←</button>
+      <h2>Jeu en ligne</h2>
+      <span class="screen-top-spacer" aria-hidden="true"></span>
+    </div>
+
+    <div class="mode-switch" role="group" aria-label="Mode de jeu">
+      <button type="button" data-mode="classic" class="active" aria-pressed="true">Mode 1 · Classique</button>
+      <button type="button" data-mode="custom" aria-pressed="false">Mode 2 · Personnalisé</button>
+    </div>
+
+    <section id="onlinePanel" class="mode-picker">
+      <button id="quickMatchBtn" class="button" type="button">
+        ⚡ Trouver un adversaire
+      </button>
+      <button id="cancelQuickBtn" class="button secondary" type="button" hidden>
+        Annuler la recherche
+      </button>
+
+      <p class="online-sep">Ou joue avec un ami grâce à un code</p>
+
+      <button id="createRoomBtn" class="button" type="button">
+        Créer une partie
+      </button>
+
+      <div class="online-join">
+        <label for="roomCode">Code d'invitation</label>
+        <input id="roomCode" type="text" placeholder="Entrer le code">
+        <button id="joinRoomBtn" class="button secondary" type="button">
+          Rejoindre
         </button>
-        <button id="cancelQuickBtn" class="button secondary" type="button" hidden>
-          Annuler la recherche
+      </div>
+
+      <div id="invitationArea" hidden>
+        <p>Code : <strong id="invitationCode"></strong></p>
+        <button id="copyInvitationBtn" class="button secondary" type="button">
+          Copier le code
         </button>
-
-        <p>Ou joue avec un ami grâce à un code :</p>
-
-        <button id="createRoomBtn" class="button" type="button">
-          Créer une partie
+        <button id="shareInvitationBtn" class="button secondary" type="button">
+          Partager le lien
         </button>
+      </div>
 
-        <div>
-          <label for="roomCode">Code d'invitation</label>
-          <input id="roomCode" type="text" placeholder="Entrer le code">
-          <button id="joinRoomBtn" class="button secondary" type="button">
-            Rejoindre
-          </button>
-        </div>
-
-        <div id="invitationArea" hidden>
-          <p>Code : <strong id="invitationCode"></strong></p>
-          <button id="copyInvitationBtn" class="button secondary" type="button">
-            Copier le code
-          </button>
-          <button id="shareInvitationBtn" class="button secondary" type="button">
-            Partager le lien
-          </button>
-        </div>
-
-        <p id="onlineStatus">Mode hors ligne</p>
-      </section>
-
-      <label for="gameMode">Mode de jeu</label>
-      <select id="gameMode" class="mode-select"><option value="classic">Mode 1 — Classique</option><option value="custom">Mode 2 — Personnalisé</option></select>
-
-      <button id="rulesBtn" class="button secondary" type="button">📜 Règles du jeu</button>
+      <p id="onlineStatus">Mode hors ligne</p>
     </section>
+  </section>
+
+  <main class="app">
+    <div class="game-topbar">
+      <button id="gameBackBtn" class="icon-btn" type="button" aria-label="Retour à l'accueil">←</button>
+      <h2 id="gameTitle">Mode 1 · Classique</h2>
+      <button class="icon-btn" type="button" data-open-rules aria-label="Règles du jeu">📜</button>
+    </div>
+    <p id="gameBanner" class="game-banner" hidden></p>
 
     <section id="classicGame" class="game-layout" aria-label="Jeu classique">
       <div class="board-panel">
@@ -241,13 +327,14 @@
     switchMode();
   </script>
   <script>
-    // Fenêtre des règles
+    // Fenêtre des règles (boutons "Règles" de l'accueil et du jeu)
     (function () {
       const modal = document.querySelector('#rulesModal');
-      const openBtn = document.querySelector('#rulesBtn');
       const closeBtn = document.querySelector('#rulesCloseBtn');
+      let opener = null;
 
-      function openRules() {
+      function openRules(event) {
+        opener = event && event.currentTarget;
         const mode = document.querySelector('#gameMode').value;
         document.querySelector('#rulesClassic').classList.toggle('hidden', mode !== 'classic');
         document.querySelector('#rulesCustom').classList.toggle('hidden', mode !== 'custom');
@@ -256,10 +343,10 @@
       }
       function closeRules() {
         modal.classList.add('hidden');
-        openBtn.focus();
+        if (opener) opener.focus();
       }
 
-      openBtn.addEventListener('click', openRules);
+      document.querySelectorAll('[data-open-rules]').forEach(btn => btn.addEventListener('click', openRules));
       closeBtn.addEventListener('click', closeRules);
       modal.addEventListener('click', e => { if (e.target === modal) closeRules(); });
       document.addEventListener('keydown', e => {
@@ -268,6 +355,7 @@
     })();
   </script>
   <script src="sounds.js"></script>
+  <script src="home.js"></script>
   <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
