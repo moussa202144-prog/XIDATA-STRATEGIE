@@ -245,3 +245,51 @@ body:not([data-view="game"]) .sound-toggle { display: none; }
   .home-art .float { animation: none; }
   .home-btn { transition: none; }
 }
+
+
+/* =====================================================
+   ÉCRAN DE JEU ÉPURÉ : seulement le plateau
+   (les éléments sont masqués, pas supprimés : le jeu continue
+   de les utiliser en coulisses)
+   ===================================================== */
+.turn-indicator { display: none; }
+body[data-view="game"] .turn-indicator { display: flex; justify-content: center; margin: 0 0 10px; }
+.turn-indicator .turn-stone { width: 38px; height: 38px; }
+
+/* Une seule colonne, plateau centré */
+body[data-view="game"] .game-layout,
+body[data-view="game"] .custom-main { grid-template-columns: minmax(0, 1fr); }
+
+/* En-tête du plateau : on garde seulement « Recommencer » */
+body[data-view="game"] .board-heading > div:first-child,
+body[data-view="game"] .mode-toggle,
+body[data-view="game"] .ai-difficulty-wrap { display: none !important; }
+body[data-view="game"] .board-heading { justify-content: flex-end; margin-bottom: 10px; }
+body[data-view="game"] .board-heading .heading-actions { flex-direction: row; align-items: center; }
+
+/* Textes inutiles sous et à côté du plateau */
+body[data-view="game"] .board-tip,
+body[data-view="game"] .score-card,
+body[data-view="game"] .fine-print,
+body[data-view="game"] footer { display: none !important; }
+
+/* Carte d'état : texte du tour, phase, adversaire, difficulté */
+body[data-view="game"] .status-card > .eyebrow,
+body[data-view="game"] .turn-line,
+body[data-view="game"] .status-text,
+body[data-view="game"] #customTurn,
+body[data-view="game"] #customStatus,
+body[data-view="game"] .custom-label,
+body[data-view="game"] #customOpponent,
+body[data-view="game"] #customDifficulty { display: none !important; }
+
+/* La carte n'apparaît que si elle sert : sanction, pion bonus, réglage du chrono avant le début */
+body[data-view="game"] .side-panel .status-card { display: none; }
+body[data-view="game"] .side-panel .status-card:has(#sanctionBox:not(.hidden)),
+body[data-view="game"] .side-panel .status-card:has(#bonusPanel:not(.hidden)),
+body[data-view="game"] .side-panel .status-card:has(#bonusTimerMode:not(:disabled)) { display: block; }
+/* Le réglage du chrono disparaît dès que la partie est lancée */
+body[data-view="game"] #bonusTimerSettings:has(#bonusTimerMode:disabled) { display: none; }
+body[data-view="game"] #bonusTimerSettings .custom-label { display: block !important; }
+/* Chrono des pions bonus : caché tant que l'option est sur « Désactivé » */
+body[data-view="game"] #customGame:has(#bonusTimerMode option[value="0"]:checked) #bonusTimer { display: none; }
