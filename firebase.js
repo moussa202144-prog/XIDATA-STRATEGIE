@@ -10,7 +10,7 @@ const firebaseConfig = {
   messagingSenderId: "698942672412",
   appId: "1:698942672412:web:c666ff68c8c196db5b59d9",
   // Google Analytics : remplace par ton identifiant "G-..." (console Firebase > Paramètres du projet > Général)
-  measurementId: "G-XXXXXXXXXX"
+  measurementId:  "G-J58GE79DWN"
 };
 
 // Initialisation Firebase
