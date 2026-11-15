@@ -5,4 +5,4 @@
   "bundledWebRuntime": false,
   "server": {
     "androidScheme": "https"
-  }
+  }}
