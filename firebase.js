@@ -8,7 +8,9 @@ const firebaseConfig = {
   projectId: "xidata-strategie-f598a",
   storageBucket: "xidata-strategie-f598a.firebasestorage.app",
   messagingSenderId: "698942672412",
-  appId: "1:698942672412:web:c666ff68c8c196db5b59d9"
+  appId: "1:698942672412:web:c666ff68c8c196db5b59d9",
+  // Google Analytics : remplace par ton identifiant "G-..." (console Firebase > Paramètres du projet > Général)
+  measurementId: "G-XXXXXXXXXX"
 };
 
 // Initialisation Firebase
@@ -19,6 +21,22 @@ if (!firebase.apps.length) {
 // Services Firebase
 window.firebaseAuth = firebase.auth();
 window.firebaseDb = firebase.database();
+
+// Google Analytics (inactif tant que measurementId n'est pas renseigné)
+window.firebaseAnalytics = null;
+if (
+  firebaseConfig.measurementId &&
+  !firebaseConfig.measurementId.includes("XXXX") &&
+  typeof firebase.analytics === "function"
+) {
+  try {
+    window.firebaseAnalytics = firebase.analytics();
+    // Rien n'est envoyé tant que le joueur n'a pas accepté (voir analytics.js)
+    window.firebaseAnalytics.setAnalyticsCollectionEnabled(false);
+  } catch (error) {
+    console.warn("Analytics indisponible :", error);
+  }
+}
 
 // Une seule connexion anonyme
 window.firebaseReady = window.firebaseAuth
@@ -34,9 +52,7 @@ window.firebaseReady = window.firebaseAuth
     const status = document.querySelector("#onlineStatus");
 
     if (status) {
-      status.textContent =
-        "Connecté à Firebase. Identifiant : " +
-        result.user.uid;
+      status.textContent = "Connecté ✅ prêt à jouer en ligne.";
     }
 
     return result.user;
