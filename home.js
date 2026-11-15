@@ -1,247 +1,199 @@
-/* =====================================================
-   XIDATA STRATÉGIE - Accueil, écran "Jeu en ligne", barre de jeu
-   À charger APRÈS style.css et african-theme.css
-   ===================================================== */
+// XIDATA STRATÉGIE - Accueil et navigation entre les écrans
+// Trois écrans : "home" (accueil), "online" (jeu en ligne), "game" (plateau).
+// Le script pilote les commandes déjà existantes (mode, ordinateur, recommencer).
+(() => {
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+  const MODE_NAMES = { classic: "Mode 1 · Classique", custom: "Mode 2 · Personnalisé" };
 
-/* ---------- Quel écran est visible ? (body[data-view]) ---------- */
-body[data-view="home"] .app,
-body[data-view="online"] .app { display: none; }
+  let mode = "classic";
 
-body[data-view="online"] #homeScreen,
-body[data-view="game"] #homeScreen,
-body[data-view="home"] #onlineScreen,
-body[data-view="game"] #onlineScreen { display: none; }
+  function waitFor(condition, timeoutMs) {
+    return new Promise(resolve => {
+      const t0 = Date.now();
+      (function check() {
+        if (condition()) return resolve(true);
+        if (Date.now() - t0 > timeoutMs) return resolve(false);
+        setTimeout(check, 100);
+      })();
+    });
+  }
 
-/* Le bouton son flottant n'apparaît que pendant une partie */
-body:not([data-view="game"]) .sound-toggle { display: none; }
+  // ---------- Écrans ----------
+  function setView(view) {
+    document.body.dataset.view = view;
+    window.scrollTo(0, 0);
+    syncBanner();
+    refreshSoundIcon();
+  }
 
-/* ---------- Écran en colonne, centré ---------- */
-.screen {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 520px;
-  min-height: 100vh;
-  min-height: 100dvh;
-  margin: 0 auto;
-  padding:
-    max(14px, env(safe-area-inset-top))
-    max(16px, env(safe-area-inset-right))
-    max(14px, env(safe-area-inset-bottom))
-    max(16px, env(safe-area-inset-left));
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
+  // ---------- Mode de jeu ----------
+  function setMode(next) {
+    mode = next === "custom" ? "custom" : "classic";
 
-/* ---------- Boutons carrés (retour, règles) ---------- */
-.icon-btn {
-  flex: 0 0 auto;
-  width: 46px;
-  height: 46px;
-  display: grid;
-  place-items: center;
-  border-radius: 14px;
-  border: 1px solid rgba(224, 160, 48, 0.55);
-  background: linear-gradient(160deg, #4a2a14, #2d1a0c);
-  color: #f3e6c8;
-  font-size: 22px;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35);
-}
-.icon-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); }
+    $$("[data-mode]").forEach(btn => {
+      const on = btn.dataset.mode === mode;
+      btn.classList.toggle("active", on);
+      btn.setAttribute("aria-pressed", String(on));
+    });
 
-/* ---------- ACCUEIL ---------- */
-.home-title { text-align: center; display: grid; justify-items: center; gap: 2px; }
-.home-title .brand-mark {
-  width: 56px;
-  height: 56px;
-  display: grid;
-  place-items: center;
-  margin-bottom: 6px;
-}
-.home-title h1 {
-  font-size: clamp(2rem, 9vw, 2.9rem);
-  line-height: 1;
-  margin: 4px 0 0;
-  text-shadow: 0 3px 0 rgba(0, 0, 0, 0.4);
-}
-.home-title .subtitle { margin: 8px 0 0; font-size: 0.95rem; }
+    const select = $("#gameMode");
+    if (select.value !== mode) {
+      select.value = mode;
+      select.dispatchEvent(new Event("change")); // charge le bon mode (game.js ou mode2.js)
+    }
 
-.home-art {
-  flex: 1 1 auto;
-  min-height: 150px;
-  max-height: 290px;
-  display: grid;
-  place-items: center;
-}
-.home-art svg {
-  width: min(86%, 330px);
-  height: auto;
-  max-height: 100%;
-  filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.45));
-  overflow: visible;
-}
-.home-art .float { animation: homeFloat 3.2s ease-in-out infinite; }
-@keyframes homeFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-7px); }
-}
+    const title = $("#gameTitle");
+    if (title) title.textContent = MODE_NAMES[mode];
+  }
 
-/* Choix du mode (Mode 1 / Mode 2) */
-.mode-switch {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  padding: 5px;
-  border-radius: 16px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(224, 160, 48, 0.3);
-}
-.mode-switch button {
-  border: 0;
-  border-radius: 12px;
-  padding: 11px 8px;
-  font-weight: 800;
-  font-size: 0.9rem;
-  background: transparent;
-  color: #cdb899;
-  cursor: pointer;
-}
-.mode-switch button.active {
-  background: linear-gradient(180deg, #f0b445, #d98a1f);
-  color: #2a1608;
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
-}
+  // Attend que le code du mode choisi soit chargé
+  function prepareMode() {
+    setMode(mode);
+    return waitFor(
+      () => (mode === "custom" ? !!window.__mode2 : typeof window.newGame === "function"),
+      6000
+    );
+  }
 
-/* Les trois gros boutons */
-.home-buttons { display: grid; gap: 12px; }
-.home-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  width: 100%;
-  min-height: 62px;
-  padding: 12px 18px;
-  border-radius: 20px;
-  border: 3px solid rgba(60, 30, 12, 0.75);
-  font-size: 1.12rem;
-  font-weight: 900;
-  line-height: 1.15;
-  text-align: center;
-  color: #fff7e6;
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
-  background: linear-gradient(180deg, #e0743a, #b8431c);
-  box-shadow: 0 5px 0 #6e2611, 0 10px 18px rgba(0, 0, 0, 0.4);
-  cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-}
-.home-btn .ico { font-size: 1.5rem; }
-.home-btn.primary {
-  background: linear-gradient(180deg, #f6c14e, #d48a1c);
-  color: #2a1608;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
-  box-shadow: 0 5px 0 #7a4b0c, 0 10px 18px rgba(0, 0, 0, 0.4);
-}
-.home-btn:active {
-  transform: translateY(4px);
-  box-shadow: 0 1px 0 #6e2611, 0 4px 8px rgba(0, 0, 0, 0.4);
-}
+  // ---------- Adversaire (ordinateur ou deuxième joueur) ----------
+  function applyOpponent(ai, level) {
+    if (mode === "classic") {
+      const toggle = $("#aiMode");
+      const difficulty = $("#classicDifficulty");
 
-/* Barre du bas : Règles / Son / Inviter */
-.home-bottom {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border-radius: 18px;
-  overflow: hidden;
-  border: 1px solid rgba(224, 160, 48, 0.35);
-  background: rgba(0, 0, 0, 0.28);
-}
-.home-bottom button {
-  display: grid;
-  place-items: center;
-  gap: 2px;
-  padding: 10px 4px;
-  border: 0;
-  background: none;
-  color: #f3e6c8;
-  font-weight: 800;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-.home-bottom button + button { border-left: 1px solid rgba(224, 160, 48, 0.2); }
-.home-bottom button .ico { font-size: 1.6rem; line-height: 1.1; }
-.home-bottom button:active { background: rgba(224, 160, 48, 0.15); }
+      if (ai && level && difficulty.value !== level) {
+        difficulty.value = level;
+        difficulty.dispatchEvent(new Event("change"));
+      }
+      if (toggle.checked !== ai) {
+        toggle.checked = ai;
+        toggle.dispatchEvent(new Event("change")); // lance une nouvelle partie
+      } else {
+        $("#restartBtn").click(); // même réglage : on repart d'un plateau neuf
+      }
+    } else {
+      const opponent = $("#customOpponent");
+      const difficulty = $("#customDifficulty");
 
-/* Choix du niveau de l'ordinateur */
-.sheet {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  display: grid;
-  align-items: end;
-  background: rgba(8, 4, 2, 0.7);
-}
-.sheet[hidden] { display: none; }
-.sheet-card {
-  box-sizing: border-box;
-  width: min(520px, 100%);
-  margin: 0 auto;
-  padding: 20px 18px calc(20px + env(safe-area-inset-bottom));
-  display: grid;
-  gap: 10px;
-  border-radius: 24px 24px 0 0;
-  background: #2d1a0c;
-  border: 1px solid rgba(224, 160, 48, 0.5);
-}
-.sheet-card h2 { margin: 0 0 4px; text-align: center; font-size: 1.2rem; color: var(--accent); }
+      if (ai && level) difficulty.value = level;
+      opponent.value = ai ? "ai" : "human";
+      opponent.dispatchEvent(new Event("change")); // réinitialise la partie
+    }
+  }
 
-/* ---------- ÉCRAN JEU EN LIGNE ---------- */
-.screen-top { display: flex; align-items: center; gap: 10px; }
-.screen-top h2 { flex: 1; margin: 0; text-align: center; font-size: 1.25rem; color: var(--accent); }
-.screen-top-spacer { flex: 0 0 46px; }
+  async function startGame(ai, level) {
+    setView("game");
+    const ready = await prepareMode();
+    if (!ready) return;
+    applyOpponent(ai, level);
+  }
 
-#onlinePanel {
-  display: grid;
-  gap: 10px;
-  margin: 0;
-}
-#onlinePanel .button { width: 100%; }
-#onlinePanel #quickMatchBtn { padding: 16px 15px; font-size: 1.05rem; }
-.online-sep {
-  margin: 6px 0 0;
-  text-align: center;
-  color: var(--muted);
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-.online-join { display: grid; gap: 8px; }
-#onlinePanel #roomCode { max-width: none; }
-#onlinePanel #onlineStatus {
-  margin: 4px 0 0;
-  text-align: center;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-#invitationArea { display: grid; gap: 8px; }
+  // ---------- Bandeau "à qui le tour" pendant une partie en ligne ----------
+  function syncBanner() {
+    const banner = $("#gameBanner");
+    const status = $("#onlineStatus");
+    if (!banner || !status) return;
+    const online = !!window.onlineGameStarted;
+    banner.hidden = !online;
+    if (online) banner.textContent = status.textContent;
+  }
 
-/* ---------- ÉCRAN DE JEU : barre du haut et bandeau ---------- */
-.game-topbar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-.game-topbar h2 { flex: 1; margin: 0; text-align: center; font-size: 1.1rem; color: var(--accent); }
+  // ---------- Retours ----------
+  async function leaveOnlineScreen() {
+    // Recherche automatique en cours : on l'annule proprement
+    if (typeof searching !== "undefined" && searching) {
+      await cancelSearch();
+      setView("home");
+      return;
+    }
+    // Salon créé avec un code et en attente : on repart de zéro
+    if (window.currentRoomCode && !window.onlineGameStarted) {
+      location.href = location.pathname;
+      return;
+    }
+    setView("home");
+  }
 
-.game-banner {
-  margin: 0 0 12px;
-  padding: 10px 14px;
-  border-radius: 14px;
-  background: rgba(224, 160, 48, 0.14);
-  border: 1px solid rgba(224, 160, 48, 0.45);
-  font-weight: 800;
-  text-align: center;
-}
-.game-banner[hidden] { display: none; }
+  function goBackFromGame() {
+    if (window.onlineGameStarted) {
+      leaveOnlineGame(); // demande confirmation, prévient l'adversaire et recharge
+      return;
+    }
+    setView("home");
+  }
 
-@media (prefers-reduced-motion: reduce) {
-  .home-art .float { animation: none; }
-  .home-btn { transition: none; }
-}
+  // ---------- Son et invitation ----------
+  function soundButton() { return $(".sound-toggle"); }
+  function refreshSoundIcon() {
+    const icon = $("#homeSoundIcon");
+    const btn = soundButton();
+    if (icon && btn && btn.textContent.trim()) icon.textContent = btn.textContent.trim();
+  }
+
+  async function shareGame() {
+    const url = location.origin + location.pathname;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "XIDATA STRATÉGIE",
+          text: "Viens jouer à XIDATA STRATÉGIE !",
+          url
+        });
+      } else {
+        await navigator.clipboard.writeText(url);
+        alert("Lien copié !");
+      }
+    } catch (error) {
+      // partage annulé : rien à faire
+    }
+  }
+
+  // ---------- Branchements ----------
+  $$("[data-mode]").forEach(btn => btn.addEventListener("click", () => setMode(btn.dataset.mode)));
+
+  $("#homeOnlineBtn").addEventListener("click", () => { setMode(mode); setView("online"); });
+  $("#homeLocalBtn").addEventListener("click", () => startGame(false));
+  $("#homeAiBtn").addEventListener("click", () => { $("#aiSheet").hidden = false; });
+
+  $$("[data-level]").forEach(btn =>
+    btn.addEventListener("click", () => {
+      $("#aiSheet").hidden = true;
+      startGame(true, btn.dataset.level);
+    })
+  );
+  $("#aiSheetCancel").addEventListener("click", () => { $("#aiSheet").hidden = true; });
+
+  $("#onlineBackBtn").addEventListener("click", leaveOnlineScreen);
+  $("#gameBackBtn").addEventListener("click", goBackFromGame);
+
+  $("#homeSoundBtn").addEventListener("click", () => {
+    const btn = soundButton();
+    if (btn) btn.click();
+    refreshSoundIcon();
+  });
+  $("#homeShareBtn").addEventListener("click", shareGame);
+
+  // Un adversaire est trouvé : on passe directement au plateau
+  window.addEventListener("xidata-online-started", () => {
+    setMode(window.currentRoomMode || mode);
+    setView("game");
+  });
+
+  // Le bandeau recopie les messages du jeu en ligne ("À toi de jouer !", etc.)
+  const status = $("#onlineStatus");
+  if (status && typeof MutationObserver === "function") {
+    new MutationObserver(syncBanner).observe(status, {
+      childList: true,
+      characterData: true,
+      subtree: true
+    });
+  }
+  setInterval(syncBanner, 700);
+
+  // ---------- Démarrage ----------
+  setMode("classic");
+  // Lien d'invitation (?room=CODE) : on ouvre directement l'écran "Jeu en ligne"
+  if (new URLSearchParams(location.search).get("room")) setView("online");
+  else setView("home");
+})();
