@@ -16,8 +16,8 @@ window.currentRoomCode = null;
 window.currentRoomRole = null;
 window.currentRoomMode = null; // "classic" (Mode 1) ou "custom" (Mode 2)
 
-// Marqueur visible : si tu ne vois pas "v6", c'est l'ancienne version en cache
-onlineStatus.textContent = "Mode hors ligne (v6)";
+// Marqueur visible : si tu ne vois pas "v7", c'est l'ancienne version en cache
+onlineStatus.textContent = "Mode hors ligne (v7)";
 
 // Pré-remplir le code si on arrive par un lien ?room=CODE
 const roomParam = new URLSearchParams(location.search).get("room");
@@ -83,7 +83,7 @@ async function watchOpponentLeft() {
         const who = snap.val();
         if (who && who !== user.uid) {
           onlineStatus.textContent =
-            "Ton adversaire a quitté la partie. Appuie sur « Quitter la partie » pour rejouer.";
+            "Ton adversaire a quitté la partie. Appuie sur ← (en haut à gauche) pour revenir à l'accueil.";
         }
       });
   } catch (error) {
@@ -120,6 +120,7 @@ function applyOnlineLocks() {
 function markOnlineGameStarted() {
   window.onlineGameStarted = true;
   applyOnlineLocks();
+  window.dispatchEvent(new Event("xidata-online-started")); // l'accueil passe à l'écran de jeu
   if (!opponentWatcherOn) {
     opponentWatcherOn = true;
     watchOpponentLeft();
