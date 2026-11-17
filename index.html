@@ -15,6 +15,7 @@
 <body data-view="home">
   <!-- ===== ACCUEIL ===== -->
   <section id="homeScreen" class="screen home" aria-label="Accueil">
+    <div id="homeCoins" class="coin-chip" aria-label="Jetons"><span aria-hidden="true">🪙</span><span class="coin-value">100</span></div>
     <header class="home-title">
       <div class="brand-mark" aria-hidden="true">X</div>
       <p class="eyebrow">JEU DE STRATÉGIE · 2 JOUEURS</p>
@@ -77,6 +78,7 @@
 
     <div class="home-bottom">
       <button type="button" data-open-rules><span class="ico" aria-hidden="true">📜</span>Règles</button>
+      <button type="button" data-open-settings><span class="ico" aria-hidden="true">⚙️</span>Réglages</button>
       <button id="homeSoundBtn" type="button"><span id="homeSoundIcon" class="ico" aria-hidden="true">🔊</span>Son</button>
       <button id="homeShareBtn" type="button"><span class="ico" aria-hidden="true">📤</span>Inviter</button>
     </div>
@@ -95,6 +97,28 @@
       <button id="aiSheetCancel" class="button secondary" type="button">Annuler</button>
     </div>
   </div>
+
+  <!-- Réglages : couleurs et temps de réflexion -->
+  <div id="settingsSheet" class="sheet" hidden>
+    <div class="sheet-card settings-card" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <h2 id="settingsTitle">⚙️ Réglages</h2>
+
+      <h3>Couleur des pions</h3>
+      <div id="pawnChoices" class="choice-row"></div>
+
+      <h3>Couleur du plateau</h3>
+      <div id="boardChoices" class="choice-row"></div>
+
+      <h3>⏳ Temps de réflexion par tour</h3>
+      <label class="setting-row"><span>🤖 Contre l'ordinateur</span><select id="timerAi" class="mode-select"></select></label>
+      <label class="setting-row"><span>👥 Deux joueurs (même appareil)</span><select id="timerLocal" class="mode-select"></select></label>
+      <label class="setting-row"><span>🌍 En ligne</span><select id="timerOnline" class="mode-select"></select></label>
+      <p class="setting-note">Quand le temps est écoulé, un coup est joué automatiquement. En ligne, c'est le réglage de celui qui crée la partie qui s'applique aux deux joueurs.</p>
+
+      <button id="settingsClose" class="button primary" type="button">Terminer</button>
+    </div>
+  </div>
+  <div id="toast" class="toast" role="status" hidden></div>
 
   <!-- ===== JEU EN LIGNE ===== -->
   <section id="onlineScreen" class="screen" aria-label="Jeu en ligne">
@@ -148,10 +172,31 @@
   <main class="app">
     <div class="game-topbar">
       <button id="gameBackBtn" class="icon-btn" type="button" aria-label="Retour à l'accueil">←</button>
+      <button class="icon-btn" type="button" data-open-settings aria-label="Réglages">⚙️</button>
       <h2 id="gameTitle">Mode 1 · Classique</h2>
-      <button class="icon-btn" type="button" data-open-rules aria-label="Règles du jeu">📜</button>
+      <div class="topbar-right">
+        <div id="gameCoins" class="coin-chip" aria-label="Jetons" hidden><span aria-hidden="true">🪙</span><span class="coin-value">100</span></div>
+        <button class="icon-btn" type="button" data-open-rules aria-label="Règles du jeu">📜</button>
+      </div>
     </div>
     <p id="gameBanner" class="game-banner" hidden></p>
+
+    <div id="turnBar" class="turn-bar" hidden>
+      <span id="turnClock" class="turn-clock">⏳ 0:00</span>
+      <span id="turnWho" class="turn-who"></span>
+    </div>
+    <div id="aiActions" class="ai-actions" hidden>
+      <button id="hintBtn" class="action-btn" type="button">
+        <span class="act-ico" aria-hidden="true">💡</span>
+        <span class="act-cost">🪙 10</span>
+        <span class="act-label">Indice</span>
+      </button>
+      <button id="undoBtn" class="action-btn" type="button">
+        <span class="act-ico" aria-hidden="true">↩️</span>
+        <span class="act-cost">🪙 40</span>
+        <span class="act-label">Annuler</span>
+      </button>
+    </div>
 
     <section id="classicGame" class="game-layout" aria-label="Jeu classique">
       <div class="board-panel">
@@ -360,6 +405,7 @@
   <script src="home.js"></script>
   <script src="stats.js"></script>
   <script src="analytics.js"></script>
+  <script src="extras.js"></script>
   <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
