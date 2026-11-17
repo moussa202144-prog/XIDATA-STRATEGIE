@@ -1,4 +1,3 @@
-
 name: Build XIDATA Android
 
 on:
@@ -44,18 +43,47 @@ jobs:
       - name: Synchroniser Capacitor
         run: npx cap sync android
 
-      - name: Installer la signature permanente
+      # La signature permanente est facultative : sans les 3 secrets,
+      # seule la version debug est compilee (elle s'installe sur un telephone).
+      - name: Verifier la signature permanente
+        id: signcheck
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
-          test -n "$ANDROID_KEYSTORE_BASE64"
-          test -n "$ANDROID_KEYSTORE_PASSWORD"
-          test -n "$ANDROID_KEY_ALIAS"
+          missing=""
+          [ -n "$ANDROID_KEYSTORE_BASE64" ]   || missing="$missing ANDROID_KEYSTORE_BASE64"
+          [ -n "$ANDROID_KEYSTORE_PASSWORD" ] || missing="$missing ANDROID_KEYSTORE_PASSWORD"
+          [ -n "$ANDROID_KEY_ALIAS" ]         || missing="$missing ANDROID_KEY_ALIAS"
 
+          echo "Taille de ANDROID_KEYSTORE_BASE64 : ${#ANDROID_KEYSTORE_BASE64} caracteres"
+
+          if [ -z "$missing" ]; then
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+            echo "Signature permanente : activee."
+          else
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Secrets introuvables par ce workflow :$missing. Seule la version debug sera compilee."
+          fi
+
+      - name: Installer la signature permanente
+        if: steps.signcheck.outputs.signed == 'true'
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/xidata-release.p12
           chmod 600 android/app/xidata-release.p12
+
+          # Verification de la cle : mauvais mot de passe, mauvais alias ou fichier incomplet
+          if ! keytool -list -storetype PKCS12 -keystore android/app/xidata-release.p12 \
+               -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias "$ANDROID_KEY_ALIAS" > /dev/null 2>&1; then
+            echo "::error::Cle illisible : verifie le mot de passe, l'alias et le texte base64 des secrets."
+            exit 1
+          fi
+          echo "Cle de signature : OK."
 
           python3 - <<'PY'
           from pathlib import Path
@@ -107,12 +135,21 @@ jobs:
           PY
 
       - name: Compiler APK
+        env:
+          # Necessaire : build.gradle lit ces valeurs pendant la compilation
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
           chmod +x android/gradlew
           cd android
-          ./gradlew assembleDebug assembleRelease
+          if [ "${{ steps.signcheck.outputs.signed }}" = "true" ]; then
+            ./gradlew assembleDebug assembleRelease
+          else
+            ./gradlew assembleDebug
+          fi
 
       - name: Publier APK Release
+        if: steps.signcheck.outputs.signed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: XIDATA-STRATEGIE-RELEASE
