@@ -608,6 +608,84 @@ for (const [dr, dc] of dirs) {
       if (timerSelect) timerSelect.value = String(bonusTimerDuration);
       if (phase === 'play') lockBonusTimerSettings();
     },
+    isAi: () => !!aiMode,
+    isBusy: () => !!aiBusy,
+    // Meilleur coup conseillé pour la couleur "color" : {to} (placement ou retrait), {from, to} (déplacement)
+    suggest: color => {
+      if (gameOver) return null;
+      const me = color || (phase === 'placement' ? placing : turn);
+      const enemy = other(me);
+      const near = i => 8 - Math.abs(row(i) - 2) - Math.abs(col(i) - 2);
+      const threatsOn = (state, i, victim) => {
+        let count = 0;
+        for (const [dr, dc] of dirs) {
+          const mr = row(i) + dr, mc = col(i) + dc, lr = row(i) + 2 * dr, lc = col(i) + 2 * dc;
+          if (inside(mr, mc) && inside(lr, lc) && state[mr * N + mc] === victim && state[lr * N + lc] === E) count++;
+        }
+        return count;
+      };
+
+      // Retrait d'un pion bonus : le pion adverse le plus menaçant
+      if (bonusPending > 0) {
+        let best = -1, bestScore = -Infinity;
+        board.forEach((p, i) => {
+          if (p !== enemy) return;
+          const score = threatsOn(board, i, me) * 10 + near(i);
+          if (score > bestScore) { bestScore = score; best = i; }
+        });
+        return best >= 0 ? { to: best } : null;
+      }
+
+      // Placement
+      if (phase === 'placement') {
+        let spots = board.map((x, i) => (x === E && i !== center ? i : -1)).filter(i => i >= 0);
+        if (me === turn && board.filter(x => x === me).length === 11) {
+          spots = spots.filter(i => { board[i] = me; const ok = hasCenterOpeningMove(turn); board[i] = E; return ok; });
+        }
+        if (!spots.length) return null;
+        let best = spots[0], bestScore = -Infinity;
+        for (const i of spots) {
+          const score = near(i) * 3 + Math.random();
+          // danger : un pion adverse voisin pourrait sauter par-dessus ce pion
+          let danger = 0;
+          for (const [dr, dc] of dirs) {
+            const er = row(i) + dr, ec = col(i) + dc, lr = row(i) + 2 * dr, lc = col(i) + 2 * dc;
+            if (inside(er, ec) && inside(lr, lc) && board[er * N + ec] === enemy && board[lr * N + lc] === E) danger++;
+          }
+          const total = score - danger * 8;
+          if (total > bestScore) { bestScore = total; best = i; }
+        }
+        return { to: best };
+      }
+
+      // Phase de jeu
+      let options = chain !== null ? movesFrom(chain).filter(m => m.cap !== null) : allMoves(me);
+      if (openingMovePending) options = options.filter(m => m.to === center);
+      if (!options.length) return null;
+      let bestMove = options[0], bestScore = -Infinity;
+      for (const m of options) {
+        const sim = board.slice();
+        sim[m.to] = me;
+        sim[m.from] = E;
+        let score = 0;
+        if (m.cap !== null) { sim[m.cap] = E; score += 100; }
+        score += near(m.to) * 5;
+        let danger = 0;
+        for (let i = 0; i < 25; i++) if (sim[i] === enemy) danger += threatsOn(sim, i, me);
+        score -= danger * 35;
+        let mobility = 0;
+        for (let i = 0; i < 25; i++) {
+          if (sim[i] !== me) continue;
+          for (const [dr, dc] of dirs) {
+            const rr = row(i) + dr, cc = col(i) + dc;
+            if (inside(rr, cc) && sim[rr * N + cc] === E) mobility++;
+          }
+        }
+        score += mobility * 2 + Math.random() * 0.1;
+        if (score > bestScore) { bestScore = score; bestMove = m; }
+      }
+      return { from: bestMove.from, to: bestMove.to };
+    },
     render: () => render(),
     reset: () => reset(),
     stopAI: () => {
