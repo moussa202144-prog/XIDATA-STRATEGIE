@@ -5,7 +5,7 @@
   "private": true,
   "description": "XIDATA STRATEGIE - Jeu de stratégie",
   "scripts": {
-    "build": "mkdir -p www && cp index.html *.js *.css manifest.json www/ && cp -R icons screenshots www/"
+    "build": "mkdir -p www && cp index.html *.js *.css manifest.json www/ && cp -R icons screenshots assets www/"
   },
   "dependencies": {
     "@capacitor/core": "^9.0.0",
