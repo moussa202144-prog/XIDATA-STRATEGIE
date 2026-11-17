@@ -407,11 +407,23 @@
   <script src="analytics.js"></script>
   <script src="extras.js"></script>
   <script>
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js")
-      .then(() => console.log("XIDATA PWA activée"))
-      .catch(error => console.error("Erreur PWA :", error));
+
+    // Dans le navigateur web : activer le Service Worker
+    const isAndroidApp =
+      window.location.protocol === "capacitor:" ||
+      window.location.protocol === "app:";
+
+    if (!isAndroidApp) {
+      navigator.serviceWorker.register("./service-worker.js")
+        .then(() => console.log("XIDATA PWA activée"))
+        .catch(error =>
+          console.error("Erreur PWA :", error)
+        );
+    }
+
   });
 }
   </script>
