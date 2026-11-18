@@ -95,8 +95,12 @@
     if (modal) {
       if (s.gameOver) {
         if (modal.classList.contains("hidden")) {
-          $("#customEndTitle").textContent = `${nameOf(s.turn)} gagnent !`;
-          $("#customEndMessage").textContent = "Partie terminée.";
+          const draw =
+            s.board.filter(x => x === B).length === 1 && s.board.filter(x => x === W).length === 1;
+          $("#customEndTitle").textContent = draw ? "Match nul" : `${nameOf(s.turn)} gagnent !`;
+          $("#customEndMessage").textContent = draw
+            ? "Il reste un pion contre un pion : la partie est déclarée nulle."
+            : "Partie terminée.";
           modal.classList.remove("hidden");
         }
       } else {
