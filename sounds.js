@@ -126,6 +126,12 @@
       [G4, C5, D5, E5, G5, E5, G5, C6].forEach((f, i) => mbira(f, 0.2 + i * 0.16, 0.24));
       for (let i = 0; i < 8; i++) shaker(i * 0.2, 0.12);
     },
+    // Match nul : deux notes égales puis un tambour doux
+    draw: () => {
+      mbira(E5, 0, 0.2);
+      mbira(E5, 0.22, 0.2);
+      drum(0.5, 100, 0.3);
+    },
     // Défaite : mbira descendante + tambour grave
     defeat: () => {
       [E5, D5, C5, G4].forEach((f, i) => mbira(f, i * 0.25, 0.2));
@@ -192,6 +198,7 @@
 
   // ---------- Fin de partie ----------
   function playEnd(titleText) {
+    if (titleText.startsWith("Match nul")) { play("draw"); return; }
     const winner = titleText.startsWith("Blancs") ? "Blancs" : "Noirs";
     let mine = null; // null = deux joueurs sur le même appareil
     if (window.currentRoomCode) {
