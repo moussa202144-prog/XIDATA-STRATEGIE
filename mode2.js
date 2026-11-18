@@ -610,6 +610,17 @@ for (const [dr, dc] of dirs) {
     },
     isAi: () => !!aiMode,
     isBusy: () => !!aiBusy,
+    // Un pion contre un pion : match nul
+    declareDraw: () => {
+      if (gameOver) return;
+      gameOver = true;
+      selected = null;
+      say('Match nul : il reste un pion de chaque côté.');
+      render();
+      modalTitle.textContent = 'Match nul';
+      modalMsg.textContent = 'Il reste un pion contre un pion : la partie est déclarée nulle.';
+      modal.classList.remove('hidden');
+    },
     // Meilleur coup conseillé pour la couleur "color" : {to} (placement ou retrait), {from, to} (déplacement)
     suggest: color => {
       if (gameOver) return null;
