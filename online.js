@@ -522,7 +522,7 @@ shareInvitationBtn.addEventListener("click", async () => {
   try {
     if (navigator.share) {
       await navigator.share({
-        title: "XIDATA STRATÉGIE",
+        title: "XIDATA XOORE",
         text: "Rejoins ma partie !",
         url: url.toString()
       });
