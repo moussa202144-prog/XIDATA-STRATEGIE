@@ -35,7 +35,8 @@
     profiles[ctx] = {
       pawns: p.pawns || stored.pawns || "ebony",
       board: p.board || stored.board || "earth",
-      timer: Number(p.timer !== undefined ? p.timer : oldTimers[ctx]) || 0
+      timer: Number(p.timer !== undefined ? p.timer : oldTimers[ctx]) || 0,
+      rules: { noBack: (p.rules && p.rules.noBack) || "off" }
     };
   });
   const settings = { profiles, tab: "ai" };
@@ -47,6 +48,13 @@
     [90, "1 min 30"],
     [120, "2 minutes"],
     [150, "2 min 30"]
+  ];
+
+  // Règles optionnelles : "pas de retour arrière" pour les pions (les rois restent libres au Mode 1)
+  const RULE_OPTIONS = [
+    ["off", "Désactivée (les pions peuvent reculer)"],
+    ["moves", "Pas de retour arrière (déplacements)"],
+    ["all", "Pas de retour arrière (déplacements et captures)"]
   ];
 
   // Couleurs des pions : b = pions noirs, w = pions blancs (3 teintes : clair, moyen, foncé)
@@ -389,6 +397,96 @@
   };
 
   /* =====================================================
+     Règles optionnelles (⚙️ Réglages) : pas de retour arrière
+     La règle est fixée au début de chaque partie.
+     En ligne, c'est la règle de celui qui crée la partie.
+     ===================================================== */
+  window.xidataRules = { noBack: "off" };
+
+  function ruleFor(ctx) {
+    if (ctx === "online" && window.currentRoomRules) return window.currentRoomRules.noBack || "off";
+    return (profiles[ctx] && profiles[ctx].rules.noBack) || "off";
+  }
+
+  // Mode 1 : on enveloppe les fonctions qui produisent les coups dans game.js
+  let classicRulesInstalled = false;
+  function installClassicRules() {
+    if (classicRulesInstalled) return;
+    if (typeof getMoves !== "function" || typeof captureMovesOnBoard !== "function" ||
+        typeof getAiMovesOnBoard !== "function") return;
+    classicRulesInstalled = true;
+
+    const rule = () => window.xidataRules.noBack || "off";
+    // Les Blancs avancent vers le haut du plateau, les Noirs vers le bas
+    const backward = (player, from, to) => {
+      const dr = rowOf(to) - rowOf(from);
+      return player === WHITE ? dr > 0 : dr < 0;
+    };
+
+    const originalGetMoves = window.getMoves;
+    window.getMoves = function (index) {
+      const moves = originalGetMoves(index);
+      const mode = rule();
+      if (mode === "off" || kings.has(index)) return moves;
+      const player = board[index];
+      return moves.filter(m => !((m.capture === null || mode === "all") && backward(player, m.from, m.to)));
+    };
+
+    const originalCapture = window.captureMovesOnBoard;
+    window.captureMovesOnBoard = function (state, kingSet, index, player) {
+      const moves = originalCapture(state, kingSet, index, player);
+      if (rule() !== "all" || kingSet.has(index)) return moves;
+      return moves.filter(m => !backward(player, m.from, m.to));
+    };
+
+    // Coups utilisés par l'ordinateur pour réfléchir (même logique, avec la règle)
+    window.getAiMovesOnBoard = function (state, kingSet, player) {
+      const mode = rule();
+      const moves = [];
+      state.forEach((piece, index) => {
+        if (piece !== player) return;
+        const king = kingSet.has(index);
+        for (const [dr, dc] of directions(index)) {
+          let r = rowOf(index) + dr;
+          let c = colOf(index) + dc;
+          while (inside(r, c) && state[r * SIZE + c] === EMPTY) {
+            const to = r * SIZE + c;
+            if (!(mode !== "off" && !king && backward(player, index, to))) {
+              moves.push({ from: index, to, capture: null, captures: [] });
+            }
+            if (!king) break;
+            r += dr;
+            c += dc;
+          }
+        }
+        for (const m of window.captureMovesOnBoard(state, kingSet, index, player)) {
+          moves.push({ from: index, to: m.to, capture: m.capture, captures: [m.capture] });
+        }
+      });
+      const capturesOnly = moves.filter(m => m.capture !== null);
+      return capturesOnly.length ? capturesOnly : moves;
+    };
+  }
+
+  let appliedRuleKey = "";
+  let ruleToastShown = false;
+  function applyRules(A, ctx) {
+    if (A.mode === "classic") installClassicRules();
+    if (!A.fresh()) { ruleToastShown = false; return; } // on ne change pas les règles en cours de partie
+    const mode = ruleFor(ctx);
+    const key = A.mode + "|" + ctx + "|" + mode;
+    if (key !== appliedRuleKey) {
+      appliedRuleKey = key;
+      window.xidataRules = { noBack: mode };
+      if (A.mode === "custom") A.api().setRules({ noBack: mode });
+    }
+    if (mode !== "off" && !ruleToastShown) {
+      ruleToastShown = true;
+      toast("📏 Règle : les pions ne peuvent pas reculer");
+    }
+  }
+
+  /* =====================================================
      Annonces stylées sur le plateau
      ===================================================== */
   let announceTimer = null;
@@ -665,6 +763,7 @@
 
     const ctx = contextOf(A);
     if (ctx !== themedCtx) applyTheme(ctx); // chaque type de partie a ses couleurs
+    applyRules(A, ctx); // règles optionnelles du type de partie
     if (A.fresh()) stacks[A.mode].length = 0; // nouvelle partie : plus rien à annuler
 
     checkDraw(A, ctx);
@@ -767,6 +866,8 @@
     buildChoices();
     const select = $("#timerSelect");
     if (select) select.value = String(profiles[settings.tab].timer || 0);
+    const ruleSelect = $("#ruleSelect");
+    if (ruleSelect) ruleSelect.value = profiles[settings.tab].rules.noBack || "off";
     const note = $("#settingsNote");
     if (note) note.hidden = settings.tab !== "online";
   }
@@ -786,6 +887,21 @@
       });
       select.addEventListener("change", () => {
         profiles[settings.tab].timer = Number(select.value) || 0;
+        saveSettings();
+      });
+    }
+
+    const ruleSelect = $("#ruleSelect");
+    if (ruleSelect) {
+      ruleSelect.innerHTML = "";
+      RULE_OPTIONS.forEach(([value, label]) => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = label;
+        ruleSelect.appendChild(option);
+      });
+      ruleSelect.addEventListener("change", () => {
+        profiles[settings.tab].rules.noBack = ruleSelect.value;
         saveSettings();
       });
     }
@@ -837,7 +953,8 @@
 
   // Utilisé par online.js (temps de réflexion de la salle) et pour les tests
   window.xidataSettings = {
-    getTurnLimit: ctx => Number(profiles[ctx] && profiles[ctx].timer) || 0
+    getTurnLimit: ctx => Number(profiles[ctx] && profiles[ctx].timer) || 0,
+    getRules: ctx => ({ noBack: (profiles[ctx] && profiles[ctx].rules.noBack) || "off" })
   };
   window.xidataExtras = {
     tick, coins: () => coins, setCoins, settings, profiles, stacks, announce, buyPack, PAYMENT,
