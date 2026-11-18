@@ -118,6 +118,10 @@
 
       <h3>⏳ Temps de réflexion par tour</h3>
       <select id="timerSelect" class="mode-select"></select>
+
+      <h3>📏 Règle : retour arrière</h3>
+      <select id="ruleSelect" class="mode-select"></select>
+      <p class="setting-note">Les règles s'appliquent à la prochaine partie. Un pion ne peut alors aller qu'en avant, à gauche ou à droite.</p>
       <p id="settingsNote" class="setting-note" hidden>En ligne, le temps choisi par celui qui crée la partie s'applique aux deux joueurs. Les couleurs restent personnelles.</p>
 
       <button id="settingsClose" class="button primary" type="button">Terminer</button>
@@ -339,6 +343,13 @@
           <li>La capture est facultative. Pour chaque pion capturé, un pion adverse supplémentaire doit être retiré au choix du joueur. L'ordinateur choisit automatiquement.</li>
           <li>Si vous commencez une chaîne de captures avec un pion, vous devez la terminer jusqu’à sa destination finale.</li>
           <li>Gagnez en capturant les 12 pions adverses.</li>
+        </ol>
+      </section>
+
+      <section class="rules-card">
+        <p class="eyebrow">OPTIONS (⚙️ RÉGLAGES)</p>
+        <ol>
+          <li><strong>Pas de retour arrière :</strong> un pion ne peut plus reculer. Il va en avant, à gauche ou à droite. Au choix : seulement pour les déplacements, ou aussi pour les captures. Les Blancs avancent vers le haut du plateau, les Noirs vers le bas. Au Mode 1, un roi reste libre de ses mouvements.</li>
         </ol>
       </section>
 
