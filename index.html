@@ -15,7 +15,7 @@
 <body data-view="home">
   <!-- ===== ACCUEIL ===== -->
   <section id="homeScreen" class="screen home" aria-label="Accueil">
-    <div id="homeCoins" class="coin-chip" aria-label="Jetons"><span aria-hidden="true">🪙</span><span class="coin-value">100</span></div>
+    <button id="homeCoins" class="coin-chip" type="button" data-open-shop aria-label="Boutique de cauris"><span class="cowrie" aria-hidden="true"></span><span class="coin-value">100</span><span class="coin-plus" aria-hidden="true">+</span></button>
     <header class="home-title">
       <div class="brand-mark" aria-hidden="true">X</div>
       <p class="eyebrow">JEU DE STRATÉGIE · 2 JOUEURS</p>
@@ -98,10 +98,17 @@
     </div>
   </div>
 
-  <!-- Réglages : couleurs et temps de réflexion -->
+  <!-- Réglages : propres à chaque type de partie -->
   <div id="settingsSheet" class="sheet" hidden>
     <div class="sheet-card settings-card" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
       <h2 id="settingsTitle">⚙️ Réglages</h2>
+      <p class="setting-note">Chaque type de partie a ses propres réglages.</p>
+
+      <div id="settingsTabs" class="mode-switch tabs3" role="group" aria-label="Type de partie">
+        <button type="button" data-tab="ai" class="active">🤖 Ordinateur</button>
+        <button type="button" data-tab="local">👥 2 joueurs</button>
+        <button type="button" data-tab="online">🌍 En ligne</button>
+      </div>
 
       <h3>Couleur des pions</h3>
       <div id="pawnChoices" class="choice-row"></div>
@@ -110,12 +117,21 @@
       <div id="boardChoices" class="choice-row"></div>
 
       <h3>⏳ Temps de réflexion par tour</h3>
-      <label class="setting-row"><span>🤖 Contre l'ordinateur</span><select id="timerAi" class="mode-select"></select></label>
-      <label class="setting-row"><span>👥 Deux joueurs (même appareil)</span><select id="timerLocal" class="mode-select"></select></label>
-      <label class="setting-row"><span>🌍 En ligne</span><select id="timerOnline" class="mode-select"></select></label>
-      <p class="setting-note">Quand le temps est écoulé, un coup est joué automatiquement. En ligne, c'est le réglage de celui qui crée la partie qui s'applique aux deux joueurs.</p>
+      <select id="timerSelect" class="mode-select"></select>
+      <p id="settingsNote" class="setting-note" hidden>En ligne, le temps choisi par celui qui crée la partie s'applique aux deux joueurs. Les couleurs restent personnelles.</p>
 
       <button id="settingsClose" class="button primary" type="button">Terminer</button>
+    </div>
+  </div>
+
+  <!-- Boutique de cauris -->
+  <div id="shopSheet" class="sheet" hidden>
+    <div class="sheet-card shop-card" role="dialog" aria-modal="true" aria-labelledby="shopTitle">
+      <h2 id="shopTitle">🛒 Boutique de cauris</h2>
+      <div class="shop-balance"><span class="cowrie" aria-hidden="true"></span><span class="coin-value">100</span></div>
+      <div id="shopPacks" class="shop-packs"></div>
+      <p class="shop-note">Les cauris servent à demander un indice ou à annuler un coup contre l'ordinateur. Tu en gagnes aussi en battant l'ordinateur et avec le bonus du jour.</p>
+      <button id="shopClose" class="button primary" type="button">Fermer</button>
     </div>
   </div>
   <div id="toast" class="toast" role="status" hidden></div>
@@ -175,7 +191,7 @@
       <button class="icon-btn" type="button" data-open-settings aria-label="Réglages">⚙️</button>
       <h2 id="gameTitle">Mode 1 · Classique</h2>
       <div class="topbar-right">
-        <div id="gameCoins" class="coin-chip" aria-label="Jetons" hidden><span aria-hidden="true">🪙</span><span class="coin-value">100</span></div>
+        <button id="gameCoins" class="coin-chip" type="button" data-open-shop aria-label="Boutique de cauris" hidden><span class="cowrie" aria-hidden="true"></span><span class="coin-value">100</span><span class="coin-plus" aria-hidden="true">+</span></button>
         <button class="icon-btn" type="button" data-open-rules aria-label="Règles du jeu">📜</button>
       </div>
     </div>
@@ -188,12 +204,12 @@
     <div id="aiActions" class="ai-actions" hidden>
       <button id="hintBtn" class="action-btn" type="button">
         <span class="act-ico" aria-hidden="true">💡</span>
-        <span class="act-cost">🪙 10</span>
+        <span class="act-cost"><span class="cowrie" aria-hidden="true"></span>10</span>
         <span class="act-label">Indice</span>
       </button>
       <button id="undoBtn" class="action-btn" type="button">
         <span class="act-ico" aria-hidden="true">↩️</span>
-        <span class="act-cost">🪙 40</span>
+        <span class="act-cost"><span class="cowrie" aria-hidden="true"></span>40</span>
         <span class="act-label">Annuler</span>
       </button>
     </div>
@@ -412,9 +428,13 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
 
     // Dans le navigateur web : activer le Service Worker
+    // (pas dans l'application Android / iOS faite avec Capacitor)
     const isAndroidApp =
       window.location.protocol === "capacitor:" ||
-      window.location.protocol === "app:";
+      window.location.protocol === "app:" ||
+      !!(window.Capacitor &&
+         typeof window.Capacitor.isNativePlatform === "function" &&
+         window.Capacitor.isNativePlatform());
 
     if (!isAndroidApp) {
       navigator.serviceWorker.register("./service-worker.js")
