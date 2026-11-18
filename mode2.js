@@ -13,6 +13,13 @@ let bonusOpponent = null;
   const boardEl=$('#customBoard'), status=$('#customStatus'), turnEl=$('#customTurn'), blackCount=$('#customBlackCount'), whiteCount=$('#customWhiteCount'), blackCap=$('#customBlackCap'), whiteCap=$('#customWhiteCap'), modal=$('#customEndModal'), modalTitle=$('#customEndTitle'), modalMsg=$('#customEndMessage');
   const other=p=>p===B?W:B, name=p=>p===B?'Noirs':'Blancs', row=i=>Math.floor(i/N), col=i=>i%N, inside=(r,c)=>r>=0&&r<N&&c>=0&&c<N;
   const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+  // Option : un pion ne peut plus reculer ("off" = désactivée, "moves" = déplacements, "all" = déplacements et captures)
+  // Les Blancs avancent vers le haut du plateau, les Noirs vers le bas.
+  let backRule='off';
+  function restrict(p,out){
+    if(backRule==='off')return out;
+    return out.filter(m=>{const dr=row(m.to)-row(m.from);const back=p===W?dr>0:dr<0;return !(back&&(m.cap===null||backRule==='all'));});
+  }
   function say(t){status.textContent=t;}
   function reset(){difficulty=$('#customDifficulty').value;
   bonusTimerLocked = false;
@@ -29,7 +36,7 @@ if (bonusTimerInterval) {
 bonusPlayer = null;
 bonusOpponent = null;
   gameOver=false; aiBusy=false; captures={[B]:0,[W]:0}; lastMove=null; openingMovePending=true; modal.classList.add('hidden'); $('#bonusPanel')?.classList.add('hidden'); $('#chainPanel')?.classList.add('hidden'); say(`Placement : les ${name(placing)} posent leur premier pion. La case centrale reste vide.`); render();if(aiMode&&placing===B)scheduleAI();}
-  function movesFrom(i){const p=board[i];if(p!==B&&p!==W)return [];let out=[];for(const [dr,dc] of dirs){let r=row(i)+dr,c=col(i)+dc;if(!inside(r,c))continue;let j=r*N+c;if(board[j]===E)out.push({from:i,to:j,cap:null});else if(board[j]===other(p)){let rr=r+dr,cc=c+dc;if(inside(rr,cc)&&board[rr*N+cc]===E)out.push({from:i,to:rr*N+cc,cap:j});}}return out;}
+  function movesFrom(i){const p=board[i];if(p!==B&&p!==W)return [];let out=[];for(const [dr,dc] of dirs){let r=row(i)+dr,c=col(i)+dc;if(!inside(r,c))continue;let j=r*N+c;if(board[j]===E)out.push({from:i,to:j,cap:null});else if(board[j]===other(p)){let rr=r+dr,cc=c+dc;if(inside(rr,cc)&&board[rr*N+cc]===E)out.push({from:i,to:rr*N+cc,cap:j});}}return restrict(p,out);}
   function allMoves(p){let a=[];board.forEach((v,i)=>{if(v===p)a.push(...movesFrom(i));});return a;}
   function availableMoves(i){const moves=movesFrom(i);return openingMovePending&&phase==='play'&&board[i]===turn?moves.filter(m=>m.to===center):moves;}
   function hasCenterOpeningMove(p=turn){return allMoves(p).some(m=>m.to===center);}
@@ -608,6 +615,8 @@ for (const [dr, dc] of dirs) {
       if (timerSelect) timerSelect.value = String(bonusTimerDuration);
       if (phase === 'play') lockBonusTimerSettings();
     },
+    setRules: r => { backRule = (r && r.noBack) || 'off'; },
+    getRules: () => ({ noBack: backRule }),
     isAi: () => !!aiMode,
     isBusy: () => !!aiBusy,
     // Un pion contre un pion : match nul
