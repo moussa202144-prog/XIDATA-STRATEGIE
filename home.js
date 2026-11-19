@@ -136,8 +136,8 @@
     try {
       if (navigator.share) {
         await navigator.share({
-          title: "XIDATA STRATÉGIE",
-          text: "Viens jouer à XIDATA STRATÉGIE !",
+          title: "XIDATA XOORE",
+          text: "Viens jouer à XIDATA XOORE !",
           url
         });
       } else {
