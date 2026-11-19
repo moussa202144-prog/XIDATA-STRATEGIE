@@ -118,7 +118,12 @@ function startOnlineGame() {
 
     if (gameOver) {
       if (endModal.classList.contains("hidden")) {
-        showEnd(`${playerName(currentPlayer)} gagnent !`, "Partie terminée.");
+        const isDraw =
+          board.filter(p => p === BLACK).length === 1 && board.filter(p => p === WHITE).length === 1;
+        showEnd(
+          isDraw ? "Match nul" : `${playerName(currentPlayer)} gagnent !`,
+          isDraw ? "Il reste un pion contre un pion : la partie est déclarée nulle." : "Partie terminée."
+        );
       }
     } else {
       endModal.classList.add("hidden");
