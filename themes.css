@@ -221,3 +221,161 @@ body .board .cell {
   .board .cell.hint-to,
   .turn-bar.low .turn-clock { animation: none; }
 }
+
+
+/* =====================================================
+   CAURIS (monnaie du jeu), boutique, annonces sur le plateau,
+   réglages par type de partie
+   ===================================================== */
+
+/* ---------- Cauri : coquillage dessiné en SVG ---------- */
+.cowrie {
+  display: inline-block;
+  width: 0.78em;
+  height: 1.05em;
+  vertical-align: -0.18em;
+  background: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 48 64%22%3E%0A%3Cdefs%3E%3CradialGradient id=%22g%22 cx=%2238%25%22 cy=%2228%25%22 r=%2285%25%22%3E%3Cstop offset=%220%22 stop-color=%22%23fffdf5%22/%3E%3Cstop offset=%22.55%22 stop-color=%22%23efdcb4%22/%3E%3Cstop offset=%221%22 stop-color=%22%23b8975a%22/%3E%3C/radialGradient%3E%3C/defs%3E%0A%3Cellipse cx=%2224%22 cy=%2233%22 rx=%2219%22 ry=%2228%22 fill=%22url(%23g)%22 stroke=%22%238a6a32%22 stroke-width=%222.2%22/%3E%0A%3Cellipse cx=%2217%22 cy=%2222%22 rx=%225%22 ry=%228%22 fill=%22%23ffffff%22 opacity=%22.35%22/%3E%0A%3Cpath d=%22M24 8 C19.5 22 19.5 44 24 58 C28.5 44 28.5 22 24 8 Z%22 fill=%22%234a2c0f%22/%3E%0A%3Cg stroke=%22%23fff8e6%22 stroke-width=%221.7%22 stroke-linecap=%22round%22%3E%3Cpath d=%22M21.0 15 L27.0 15%22/%3E%3Cpath d=%22M20.3 19 L27.7 19%22/%3E%3Cpath d=%22M19.6 23 L28.4 23%22/%3E%3Cpath d=%22M19.2 27 L28.8 27%22/%3E%3Cpath d=%22M19.0 31 L29.0 31%22/%3E%3Cpath d=%22M19.1 35 L28.9 35%22/%3E%3Cpath d=%22M19.4 39 L28.6 39%22/%3E%3Cpath d=%22M19.9 43 L28.1 43%22/%3E%3Cpath d=%22M20.6 47 L27.4 47%22/%3E%3Cpath d=%22M21.5 51 L26.5 51%22/%3E%3C/g%3E%0A%3C/svg%3E") center / contain no-repeat;
+}
+button.coin-chip { cursor: pointer; font: inherit; font-weight: 900; color: #f3e6c8; }
+button.coin-chip:active { transform: translateY(2px); box-shadow: none; }
+.coin-chip .cowrie { font-size: 1.25rem; }
+.coin-plus {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e0a030;
+  color: #2a1608;
+  font-weight: 900;
+  line-height: 1;
+}
+.act-cost .cowrie { font-size: 0.95em; margin-right: 3px; }
+
+/* ---------- Annonces stylées sur le plateau ---------- */
+#boardAnnounce {
+  position: fixed;
+  z-index: 75;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+  max-width: 94vw;
+}
+#boardAnnounce[hidden] { display: none; }
+.ann-card {
+  position: relative;
+  box-sizing: border-box;
+  min-width: 220px;
+  max-width: 100%;
+  padding: 24px 24px 18px 52px;
+  border-radius: 22px;
+  text-align: center;
+  background: rgba(45, 26, 12, 0.94);
+  border: 3px solid #e0a030;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.35), 0 18px 40px rgba(0, 0, 0, 0.6);
+}
+.ann-card::before,
+.ann-card::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  height: 7px;
+  border-radius: 4px;
+  background: repeating-linear-gradient(45deg, #e0a030 0 6px, #c4532a 6px 12px, #1c110a 12px 18px);
+}
+.ann-card::before { top: 8px; }
+.ann-card::after { bottom: 8px; }
+.ann-text {
+  display: block;
+  font-weight: 900;
+  font-size: clamp(2rem, 11vw, 3.3rem);
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  color: #fff3d2;
+  -webkit-text-stroke: 2px #5a2a0a;
+  paint-order: stroke fill;
+  text-shadow: 0 4px 0 #b8431c, 0 10px 18px rgba(0, 0, 0, 0.55);
+}
+.ann-sub { display: block; margin-top: 6px; font-weight: 800; font-size: 0.95rem; color: #f0d9a8; }
+.ann-sticker {
+  position: absolute;
+  left: -20px;
+  top: -24px;
+  width: 66px;
+  height: 66px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff7e6;
+  border: 4px solid #ffffff;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5), 0 0 0 3px #5a2a0a;
+  font-size: 36px;
+  transform: rotate(-12deg);
+}
+#boardAnnounce.tone-souffle .ann-card { border-color: #ff8a5c; }
+#boardAnnounce.tone-souffle .ann-text { text-shadow: 0 4px 0 #a02a0c, 0 10px 18px rgba(0, 0, 0, 0.55); }
+#boardAnnounce.tone-win .ann-card { border-color: #f6c14e; }
+#boardAnnounce.tone-win .ann-text { color: #fff1b0; text-shadow: 0 4px 0 #b8860b, 0 10px 18px rgba(0, 0, 0, 0.55); }
+#boardAnnounce.tone-draw .ann-card { border-color: #9bb4c9; }
+#boardAnnounce.tone-draw .ann-text { text-shadow: 0 4px 0 #44627d, 0 10px 18px rgba(0, 0, 0, 0.55); }
+#boardAnnounce.tone-lose .ann-card { border-color: #8a7a6a; }
+#boardAnnounce.tone-lose .ann-text { text-shadow: 0 4px 0 #3a2a1c, 0 10px 18px rgba(0, 0, 0, 0.55); }
+.ann-card.pop { animation: annPop 0.55s cubic-bezier(0.2, 1.5, 0.4, 1) both; }
+.ann-card.out { animation: annOut 0.4s ease-in both; }
+@keyframes annPop {
+  0% { transform: scale(0.3) rotate(-8deg); opacity: 0; }
+  60% { transform: scale(1.08) rotate(2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+@keyframes annOut { to { transform: scale(0.9); opacity: 0; } }
+
+/* ---------- Réglages : onglets par type de partie ---------- */
+.tabs3 { grid-template-columns: repeat(3, 1fr); }
+.tabs3 button { font-size: 0.8rem; padding: 10px 4px; }
+
+/* ---------- Boutique ---------- */
+.shop-balance { display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 1.5rem; font-weight: 900; }
+.shop-balance .cowrie { font-size: 1.7rem; }
+.shop-packs { display: grid; gap: 10px; }
+.shop-pack {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(224, 160, 48, 0.35);
+}
+.shop-pack .pack-icons { display: flex; font-size: 1.4rem; min-width: 52px; }
+.shop-pack .pack-icons .cowrie { margin-right: -6px; }
+.shop-pack .pack-name { display: block; font-weight: 900; }
+.shop-pack .pack-amount { display: block; color: #e0a030; font-weight: 800; font-size: 0.9rem; }
+.shop-pack .pack-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #c4532a;
+  color: #fff3d2;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+.shop-pack .buy {
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f6c14e, #d48a1c);
+  color: #2a1608;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #7a4b0c;
+}
+.shop-pack .buy:active { transform: translateY(2px); box-shadow: none; }
+.shop-note { margin: 4px 0 0; color: var(--muted); font-size: 0.8rem; line-height: 1.4; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ann-card.pop, .ann-card.out { animation: none; }
+}
