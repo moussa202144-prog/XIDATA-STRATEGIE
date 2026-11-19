@@ -13,6 +13,13 @@ let bonusOpponent = null;
   const boardEl=$('#customBoard'), status=$('#customStatus'), turnEl=$('#customTurn'), blackCount=$('#customBlackCount'), whiteCount=$('#customWhiteCount'), blackCap=$('#customBlackCap'), whiteCap=$('#customWhiteCap'), modal=$('#customEndModal'), modalTitle=$('#customEndTitle'), modalMsg=$('#customEndMessage');
   const other=p=>p===B?W:B, name=p=>p===B?'Noirs':'Blancs', row=i=>Math.floor(i/N), col=i=>i%N, inside=(r,c)=>r>=0&&r<N&&c>=0&&c<N;
   const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+  // Option : un pion ne peut plus reculer ("off" = désactivée, "moves" = déplacements, "all" = déplacements et captures)
+  // Les Blancs avancent vers le haut du plateau, les Noirs vers le bas.
+  let backRule='off';
+  function restrict(p,out){
+    if(backRule==='off')return out;
+    return out.filter(m=>{const dr=row(m.to)-row(m.from);const back=p===W?dr>0:dr<0;return !(back&&(m.cap===null||backRule==='all'));});
+  }
   function say(t){status.textContent=t;}
   function reset(){difficulty=$('#customDifficulty').value;
   bonusTimerLocked = false;
@@ -29,7 +36,7 @@ if (bonusTimerInterval) {
 bonusPlayer = null;
 bonusOpponent = null;
   gameOver=false; aiBusy=false; captures={[B]:0,[W]:0}; lastMove=null; openingMovePending=true; modal.classList.add('hidden'); $('#bonusPanel')?.classList.add('hidden'); $('#chainPanel')?.classList.add('hidden'); say(`Placement : les ${name(placing)} posent leur premier pion. La case centrale reste vide.`); render();if(aiMode&&placing===B)scheduleAI();}
-  function movesFrom(i){const p=board[i];if(p!==B&&p!==W)return [];let out=[];for(const [dr,dc] of dirs){let r=row(i)+dr,c=col(i)+dc;if(!inside(r,c))continue;let j=r*N+c;if(board[j]===E)out.push({from:i,to:j,cap:null});else if(board[j]===other(p)){let rr=r+dr,cc=c+dc;if(inside(rr,cc)&&board[rr*N+cc]===E)out.push({from:i,to:rr*N+cc,cap:j});}}return out;}
+  function movesFrom(i){const p=board[i];if(p!==B&&p!==W)return [];let out=[];for(const [dr,dc] of dirs){let r=row(i)+dr,c=col(i)+dc;if(!inside(r,c))continue;let j=r*N+c;if(board[j]===E)out.push({from:i,to:j,cap:null});else if(board[j]===other(p)){let rr=r+dr,cc=c+dc;if(inside(rr,cc)&&board[rr*N+cc]===E)out.push({from:i,to:rr*N+cc,cap:j});}}return restrict(p,out);}
   function allMoves(p){let a=[];board.forEach((v,i)=>{if(v===p)a.push(...movesFrom(i));});return a;}
   function availableMoves(i){const moves=movesFrom(i);return openingMovePending&&phase==='play'&&board[i]===turn?moves.filter(m=>m.to===center):moves;}
   function hasCenterOpeningMove(p=turn){return allMoves(p).some(m=>m.to===center);}
@@ -607,6 +614,97 @@ for (const [dr, dc] of dirs) {
       const timerSelect = $('#bonusTimerMode');
       if (timerSelect) timerSelect.value = String(bonusTimerDuration);
       if (phase === 'play') lockBonusTimerSettings();
+    },
+    setRules: r => { backRule = (r && r.noBack) || 'off'; },
+    getRules: () => ({ noBack: backRule }),
+    isAi: () => !!aiMode,
+    isBusy: () => !!aiBusy,
+    // Un pion contre un pion : match nul
+    declareDraw: () => {
+      if (gameOver) return;
+      gameOver = true;
+      selected = null;
+      say('Match nul : il reste un pion de chaque côté.');
+      render();
+      modalTitle.textContent = 'Match nul';
+      modalMsg.textContent = 'Il reste un pion contre un pion : la partie est déclarée nulle.';
+      modal.classList.remove('hidden');
+    },
+    // Meilleur coup conseillé pour la couleur "color" : {to} (placement ou retrait), {from, to} (déplacement)
+    suggest: color => {
+      if (gameOver) return null;
+      const me = color || (phase === 'placement' ? placing : turn);
+      const enemy = other(me);
+      const near = i => 8 - Math.abs(row(i) - 2) - Math.abs(col(i) - 2);
+      const threatsOn = (state, i, victim) => {
+        let count = 0;
+        for (const [dr, dc] of dirs) {
+          const mr = row(i) + dr, mc = col(i) + dc, lr = row(i) + 2 * dr, lc = col(i) + 2 * dc;
+          if (inside(mr, mc) && inside(lr, lc) && state[mr * N + mc] === victim && state[lr * N + lc] === E) count++;
+        }
+        return count;
+      };
+
+      // Retrait d'un pion bonus : le pion adverse le plus menaçant
+      if (bonusPending > 0) {
+        let best = -1, bestScore = -Infinity;
+        board.forEach((p, i) => {
+          if (p !== enemy) return;
+          const score = threatsOn(board, i, me) * 10 + near(i);
+          if (score > bestScore) { bestScore = score; best = i; }
+        });
+        return best >= 0 ? { to: best } : null;
+      }
+
+      // Placement
+      if (phase === 'placement') {
+        let spots = board.map((x, i) => (x === E && i !== center ? i : -1)).filter(i => i >= 0);
+        if (me === turn && board.filter(x => x === me).length === 11) {
+          spots = spots.filter(i => { board[i] = me; const ok = hasCenterOpeningMove(turn); board[i] = E; return ok; });
+        }
+        if (!spots.length) return null;
+        let best = spots[0], bestScore = -Infinity;
+        for (const i of spots) {
+          const score = near(i) * 3 + Math.random();
+          // danger : un pion adverse voisin pourrait sauter par-dessus ce pion
+          let danger = 0;
+          for (const [dr, dc] of dirs) {
+            const er = row(i) + dr, ec = col(i) + dc, lr = row(i) + 2 * dr, lc = col(i) + 2 * dc;
+            if (inside(er, ec) && inside(lr, lc) && board[er * N + ec] === enemy && board[lr * N + lc] === E) danger++;
+          }
+          const total = score - danger * 8;
+          if (total > bestScore) { bestScore = total; best = i; }
+        }
+        return { to: best };
+      }
+
+      // Phase de jeu
+      let options = chain !== null ? movesFrom(chain).filter(m => m.cap !== null) : allMoves(me);
+      if (openingMovePending) options = options.filter(m => m.to === center);
+      if (!options.length) return null;
+      let bestMove = options[0], bestScore = -Infinity;
+      for (const m of options) {
+        const sim = board.slice();
+        sim[m.to] = me;
+        sim[m.from] = E;
+        let score = 0;
+        if (m.cap !== null) { sim[m.cap] = E; score += 100; }
+        score += near(m.to) * 5;
+        let danger = 0;
+        for (let i = 0; i < 25; i++) if (sim[i] === enemy) danger += threatsOn(sim, i, me);
+        score -= danger * 35;
+        let mobility = 0;
+        for (let i = 0; i < 25; i++) {
+          if (sim[i] !== me) continue;
+          for (const [dr, dc] of dirs) {
+            const rr = row(i) + dr, cc = col(i) + dc;
+            if (inside(rr, cc) && sim[rr * N + cc] === E) mobility++;
+          }
+        }
+        score += mobility * 2 + Math.random() * 0.1;
+        if (score > bestScore) { bestScore = score; bestMove = m; }
+      }
+      return { from: bestMove.from, to: bestMove.to };
     },
     render: () => render(),
     reset: () => reset(),
