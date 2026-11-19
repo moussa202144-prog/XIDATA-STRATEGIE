@@ -15,9 +15,11 @@ const shareInvitationBtn = document.querySelector("#shareInvitationBtn");
 window.currentRoomCode = null;
 window.currentRoomRole = null;
 window.currentRoomMode = null; // "classic" (Mode 1) ou "custom" (Mode 2)
+window.currentRoomTurnLimit = null; // temps de réflexion par tour (secondes), fixé par l'hôte
+window.currentRoomRules = null; // règles optionnelles de la partie, fixées par l'hôte
 
-// Marqueur visible : si tu ne vois pas "v7", c'est l'ancienne version en cache
-onlineStatus.textContent = "Mode hors ligne (v7)";
+// Marqueur visible : si tu ne vois pas "v9", c'est l'ancienne version en cache
+onlineStatus.textContent = "Mode hors ligne (v9)";
 
 // Pré-remplir le code si on arrive par un lien ?room=CODE
 const roomParam = new URLSearchParams(location.search).get("room");
@@ -184,6 +186,8 @@ function generateRoomCode() {
 
 // Crée un salon "en attente" et renvoie son code
 async function createRoomRecord(user, quick, mode) {
+  const turnLimit = window.xidataSettings ? window.xidataSettings.getTurnLimit("online") : 0;
+  const rules = window.xidataSettings ? window.xidataSettings.getRules("online") : { noBack: "off" };
   for (let i = 0; i < 5; i++) {
     const code = generateRoomCode();
     const result = await window.firebaseDb
@@ -195,10 +199,16 @@ async function createRoomRecord(user, quick, mode) {
           status: "waiting",
           createdAt: Date.now(),
           quick: !!quick,
-          mode: mode || "classic"
+          mode: mode || "classic",
+          turnLimit: turnLimit,
+          rules: rules
         };
       });
-    if (result.committed) return code;
+    if (result.committed) {
+      window.currentRoomTurnLimit = turnLimit; // côté hôte (l'invité le remplace en rejoignant)
+      window.currentRoomRules = rules;
+      return code;
+    }
   }
   throw new Error("Impossible de créer un code, réessaie.");
 }
@@ -251,6 +261,8 @@ async function joinRoom(code, user) {
   window.currentRoomCode = code;
   window.currentRoomRole = "guest";
   window.currentRoomMode = mode;
+  window.currentRoomTurnLimit = Number(info && info.turnLimit) || 0; // temps de l'hôte
+  window.currentRoomRules = (info && info.rules) || { noBack: "off" }; // règles de l'hôte
 
   startOnlineByMode(mode);
   markOnlineGameStarted();
@@ -510,7 +522,7 @@ shareInvitationBtn.addEventListener("click", async () => {
   try {
     if (navigator.share) {
       await navigator.share({
-        title: "XIDATA STRATÉGIE",
+        title: "XIDATA XOORE",
         text: "Rejoins ma partie !",
         url: url.toString()
       });
