@@ -10,7 +10,7 @@ const firebaseConfig = {
   messagingSenderId: "698942672412",
   appId: "1:698942672412:web:c666ff68c8c196db5b59d9",
   // Google Analytics : remplace par ton identifiant "G-..." (console Firebase > Paramètres du projet > Général)
-  measurementId:  "G-J58GE79DWN"
+    measurementId:  "G-J58GE79DWN"
 };
 
 // Initialisation Firebase
@@ -38,14 +38,27 @@ if (
   }
 }
 
-// Une seule connexion anonyme
-window.firebaseReady = window.firebaseAuth
-  .signInAnonymously()
+// Serveur d'achats (Cloud Functions), si le script est chargé
+window.firebaseFunctions =
+  typeof firebase.functions === "function" ? firebase.app().functions("europe-west1") : null;
+
+// Une seule connexion : on reprend la session existante (compte Google lié),
+// sinon on se connecte anonymement.
+window.firebaseReady = new Promise((resolve, reject) => {
+  const stop = window.firebaseAuth.onAuthStateChanged((user) => {
+    stop();
+    if (user) {
+      resolve({ user });
+      return;
+    }
+    window.firebaseAuth.signInAnonymously().then(resolve).catch(reject);
+  });
+})
   .then((result) => {
     window.currentPlayer = result.user;
 
     console.log(
-      "XIDATA STRATEGIE connecté !",
+      "XIDATA XOORE connecté !",
       result.user.uid
     );
 
