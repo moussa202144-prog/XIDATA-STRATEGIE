@@ -133,6 +133,12 @@
     <div class="sheet-card shop-card" role="dialog" aria-modal="true" aria-labelledby="shopTitle">
       <h2 id="shopTitle">🛒 Boutique de cauris</h2>
       <div class="shop-balance"><span class="cowrie" aria-hidden="true"></span><span class="coin-value">100</span></div>
+      <p id="shopPurchased" class="shop-note" hidden></p>
+      <div id="accountBox" class="account-box" hidden>
+        <p id="accountStatus" class="shop-note"></p>
+        <button id="accountSignIn" class="button secondary" type="button" hidden>Se connecter avec Google</button>
+        <button id="accountSignOut" class="button secondary" type="button" hidden>Se déconnecter</button>
+      </div>
       <div id="shopPacks" class="shop-packs"></div>
       <p class="shop-note">Les cauris servent à demander un indice ou à annuler un coup contre l'ordinateur. Tu en gagnes aussi en battant l'ordinateur et avec le bonus du jour.</p>
       <button id="shopClose" class="button primary" type="button">Fermer</button>
@@ -379,6 +385,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-functions-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics-compat.js"></script>
 <script src="firebase.js"></script>
 <script src="online.js"></script>
@@ -432,6 +439,7 @@
   <script src="home.js"></script>
   <script src="stats.js"></script>
   <script src="analytics.js"></script>
+  <script src="wallet.js"></script>
   <script src="extras.js"></script>
   <script>
 
