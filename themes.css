@@ -1,387 +1,470 @@
-/* =====================================================
-   XIDATA STRATÉGIE - Thèmes de couleurs, jetons, indice/annuler,
-   minuteur de tour et fenêtre Réglages
-   À charger APRÈS style.css, african-theme.css et home.css
-   Les couleurs choisies sont appliquées par extras.js (variables --pb1, --bd1…)
-   ===================================================== */
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#17211b">
+  <link rel="manifest" href="manifest.json">
+  <meta name="description" content="XIDATA XOORE : jeu de stratégie avec IA et multijoueur en ligne.">
+  <title>XIDATA XOORE</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="african-theme.css">
+  <link rel="stylesheet" href="home.css">
+  <link rel="stylesheet" href="themes.css">
+</head>
+<body data-view="home">
+  <!-- ===== ACCUEIL ===== -->
+  <section id="homeScreen" class="screen home" aria-label="Accueil">
+    <button id="homeCoins" class="coin-chip" type="button" data-open-shop aria-label="Boutique de cauris"><span class="cowrie" aria-hidden="true"></span><span class="coin-value">100</span><span class="coin-plus" aria-hidden="true">+</span></button>
+    <header class="home-title">
+      <div class="brand-mark" aria-hidden="true">X</div>
+      <p class="eyebrow">JEU DE STRATÉGIE · 2 JOUEURS</p>
+      <h1>XIDATA <span>XOORE</span></h1>
+      <p class="subtitle">Une case libre. Deux joueurs. Chaque décision compte.</p>
+    </header>
 
-/* ---------- Couleurs par défaut (Ébène & Ivoire, plateau Terre) ---------- */
-:root {
-  --pb1: #7a5238; --pb2: #2a170b; --pb3: #0b0603;
-  --pw1: #fffaf0; --pw2: #eadbb6; --pw3: #b99d68;
-  --ringb: #e0a030; --ringw: #c4532a;
-  --edgeb: #0b0603; --edgew: #8f7440;
+    <div class="home-art" aria-hidden="true">
+      <svg viewBox="0 0 320 230" focusable="false">
+        <defs>
+          <linearGradient id="hTop" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b9743a"/><stop offset="1" stop-color="#7b4521"/></linearGradient>
+          <radialGradient id="hHole" cx="50%" cy="35%" r="70%"><stop offset="0" stop-color="#4a2810"/><stop offset="1" stop-color="#1f0f06"/></radialGradient>
+          <radialGradient id="hEbony" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#7a5238"/><stop offset=".55" stop-color="#2a170b"/><stop offset="1" stop-color="#0b0603"/></radialGradient>
+          <radialGradient id="hIvory" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#fffaf0"/><stop offset=".6" stop-color="#eadbb6"/><stop offset="1" stop-color="#b99d68"/></radialGradient>
+          <g id="pEbony">
+            <ellipse cx="0" cy="8" rx="20" ry="10" fill="#0b0603"/>
+            <rect x="-20" y="0" width="40" height="8" fill="#150b05"/>
+            <ellipse cx="0" cy="0" rx="20" ry="10" fill="url(#hEbony)" stroke="#0b0603" stroke-width="1.5"/>
+            <ellipse cx="0" cy="0" rx="14" ry="6.6" fill="none" stroke="#e0a030" stroke-width="1.8" stroke-dasharray="1 4" stroke-linecap="round"/>
+            <path d="M0 -4 L4 0 L0 4 L-4 0 Z" fill="#e0a030"/>
+          </g>
+          <g id="pIvory">
+            <ellipse cx="0" cy="8" rx="20" ry="10" fill="#9a7f4c"/>
+            <rect x="-20" y="0" width="40" height="8" fill="#cdb98c"/>
+            <ellipse cx="0" cy="0" rx="20" ry="10" fill="url(#hIvory)" stroke="#8f7440" stroke-width="1.5"/>
+            <ellipse cx="0" cy="0" rx="14" ry="6.6" fill="none" stroke="#c4532a" stroke-width="1.8" stroke-dasharray="1 4" stroke-linecap="round"/>
+            <path d="M0 -4 L4 0 L0 4 L-4 0 Z" fill="#c4532a"/>
+          </g>
+          <g id="pKing">
+            <use href="#pIvory"/>
+            <path d="M-9 4 L-7 -9 L-3 -2 L0 -11 L3 -2 L7 -9 L9 4 Z" fill="#c98a12" stroke="#7a4b0c" stroke-width="1"/>
+          </g>
+        </defs>
 
-  --bd1: #8c5832;
-  --bd2: rgba(190, 120, 70, 0.55);
-  --bd3: rgba(90, 50, 25, 0.5);
-  --bdborder: #5a3519;
-  --hole1: #3d2312; --hole2: #24130a;
-  --holerim: rgba(222, 165, 110, 0.35);
-}
+        <polygon points="30,150 160,205 160,222 30,167" fill="#4a2810"/>
+        <polygon points="160,205 290,150 290,167 160,222" fill="#35190a"/>
+        <polygon points="160,95 290,150 160,205 30,150" fill="url(#hTop)" stroke="#3b200d" stroke-width="3" stroke-linejoin="round"/>
+        <g fill="url(#hHole)">
+          <ellipse cx="160" cy="110" rx="17" ry="9"/><ellipse cx="122" cy="130" rx="17" ry="9"/><ellipse cx="198" cy="130" rx="17" ry="9"/>
+          <ellipse cx="84" cy="150" rx="17" ry="9"/><ellipse cx="160" cy="150" rx="17" ry="9"/><ellipse cx="236" cy="150" rx="17" ry="9"/>
+          <ellipse cx="122" cy="170" rx="17" ry="9"/><ellipse cx="198" cy="170" rx="17" ry="9"/><ellipse cx="160" cy="190" rx="17" ry="9"/>
+        </g>
+        <use href="#pEbony" x="122" y="124"/>
+        <use href="#pIvory" x="198" y="164"/>
+        <ellipse cx="160" cy="112" rx="24" ry="6" fill="rgba(0,0,0,.28)"/>
+        <g class="float"><use href="#pKing" transform="translate(160 56) scale(1.5)"/></g>
+      </svg>
+    </div>
 
-/* ---------- Pions ---------- */
-body .board .stone.black {
-  background:
-    repeating-linear-gradient(100deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 6px),
-    radial-gradient(circle at 35% 30%, var(--pb1), var(--pb2) 55%, var(--pb3)) !important;
-  border-color: var(--edgeb);
-}
-body .board .stone.white {
-  background:
-    repeating-linear-gradient(100deg, rgba(120, 80, 30, 0.07) 0 2px, transparent 2px 6px),
-    radial-gradient(circle at 35% 30%, var(--pw1), var(--pw2) 55%, var(--pw3)) !important;
-  border-color: var(--edgew);
-}
-body .board .stone::after { border-color: var(--ringb); }
-body .board .stone.white::after { border-color: var(--ringw); }
-body .board .stone:not(.king)::before { background: var(--ringb); }
-body .board .stone.white:not(.king)::before { background: var(--ringw); }
+    <div class="mode-switch" role="group" aria-label="Mode de jeu">
+      <button type="button" data-mode="classic" class="active" aria-pressed="true">Mode 1 · Classique</button>
+      <button type="button" data-mode="custom" aria-pressed="false">Mode 2 · Personnalisé</button>
+    </div>
 
-/* Pastilles du tour et du score */
-body .turn-stone.black,
-body .mini-stone.black {
-  background: radial-gradient(circle at 35% 30%, var(--pb1), var(--pb2) 55%, var(--pb3));
-  border-color: var(--edgeb);
-}
-body .turn-stone.white,
-body .mini-stone.white {
-  background: radial-gradient(circle at 35% 30%, var(--pw1), var(--pw2) 55%, var(--pw3));
-  border-color: var(--edgew);
-}
-body .turn-stone::after,
-body .mini-stone::after { background: var(--ringb); }
-body .turn-stone.white::after,
-body .mini-stone.white::after { background: var(--ringw); }
+    <nav class="home-buttons" aria-label="Choisir une partie">
+      <button id="homeOnlineBtn" class="home-btn primary" type="button"><span class="ico" aria-hidden="true">🌍</span>Jeu en ligne</button>
+      <button id="homeAiBtn" class="home-btn" type="button"><span class="ico" aria-hidden="true">🤖</span>Jouer contre l'ordinateur</button>
+      <button id="homeLocalBtn" class="home-btn" type="button"><span class="ico" aria-hidden="true">👥</span>Deux joueurs · même appareil</button>
+    </nav>
 
-/* ---------- Plateau ---------- */
-body .board {
-  background:
-    radial-gradient(circle at 12% 18%, rgba(255, 220, 170, 0.22) 0 2px, transparent 3px),
-    radial-gradient(circle at 70% 40%, rgba(40, 20, 8, 0.35) 0 2px, transparent 3px),
-    radial-gradient(circle at 40% 80%, rgba(255, 220, 170, 0.18) 0 1.5px, transparent 2.5px),
-    radial-gradient(circle at 85% 85%, rgba(40, 20, 8, 0.32) 0 1.5px, transparent 2.5px),
-    radial-gradient(ellipse at 25% 30%, var(--bd2), transparent 60%),
-    radial-gradient(ellipse at 80% 70%, var(--bd3), transparent 60%),
-    var(--bd1) !important;
-  background-size: 23px 23px, 31px 31px, 17px 17px, 29px 29px, 100% 100%, 100% 100%, auto !important;
-  border-color: var(--bdborder);
-}
-body .board .cell,
-body .board .cell.light,
-body .board .cell.dark {
-  background: radial-gradient(circle at 50% 38%, var(--hole1), var(--hole2) 80%) !important;
-}
-body .board .cell {
-  box-shadow:
-    inset 0 6px 12px rgba(0, 0, 0, 0.75),
-    0 0 0 3px var(--holerim),
-    0 2px 0 3px rgba(0, 0, 0, 0.35);
-}
+    <div class="home-bottom">
+      <button type="button" data-open-rules><span class="ico" aria-hidden="true">📜</span>Règles</button>
+      <button type="button" data-open-settings><span class="ico" aria-hidden="true">⚙️</span>Réglages</button>
+      <button id="homeSoundBtn" type="button"><span id="homeSoundIcon" class="ico" aria-hidden="true">🔊</span>Son</button>
+      <button id="homeShareBtn" type="button"><span class="ico" aria-hidden="true">📤</span>Inviter</button>
+    </div>
 
-/* ---------- Indice : cases suggérées ---------- */
-.board .cell.hint-from,
-.board .cell.hint-to {
-  outline: 3px solid #3bb3ff;
-  outline-offset: -4px;
-}
-.board .cell.hint-to { animation: hintPulse 1s ease-in-out infinite; }
-@keyframes hintPulse { 50% { filter: brightness(1.7); } }
+    <!-- Le mode de jeu reste géré par ce sélecteur (utilisé par le jeu et le jeu en ligne) -->
+    <select id="gameMode" class="mode-select" hidden><option value="classic">Mode 1 — Classique</option><option value="custom">Mode 2 — Personnalisé</option></select>
+  </section>
 
-/* ---------- Jetons ---------- */
-.coin-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: #2d1a0c;
-  border: 1px solid #e0a030;
-  color: #f3e6c8;
-  font-weight: 900;
-  font-size: 1rem;
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
-}
-.coin-chip[hidden] { display: none; }
-#homeScreen { position: relative; }
-#homeCoins { position: absolute; top: max(14px, env(safe-area-inset-top)); right: max(16px, env(safe-area-inset-right)); }
+  <!-- Choix du niveau de l'ordinateur -->
+  <div id="aiSheet" class="sheet" hidden>
+    <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="aiSheetTitle">
+      <h2 id="aiSheetTitle">Niveau de l'ordinateur</h2>
+      <button class="home-btn" type="button" data-level="easy">🌱 Facile</button>
+      <button class="home-btn" type="button" data-level="medium">🔥 Moyen</button>
+      <button class="home-btn" type="button" data-level="hard">🦁 Difficile</button>
+      <button id="aiSheetCancel" class="button secondary" type="button">Annuler</button>
+    </div>
+  </div>
 
-/* ---------- Barre du haut du plateau ---------- */
-.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-@media (max-width: 420px) { .game-topbar h2 { display: none; } }
+  <!-- Réglages : propres à chaque type de partie -->
+  <div id="settingsSheet" class="sheet" hidden>
+    <div class="sheet-card settings-card" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <h2 id="settingsTitle">⚙️ Réglages</h2>
+      <p class="setting-note">Chaque type de partie a ses propres réglages.</p>
 
-/* ---------- Minuteur de tour ---------- */
-.turn-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin: 0 0 10px;
-  padding: 8px 14px;
-  border-radius: 14px;
-  background: rgba(0, 0, 0, 0.28);
-  border: 1px solid rgba(224, 160, 48, 0.35);
-  font-weight: 900;
-}
-.turn-bar[hidden] { display: none; }
-.turn-clock { font-variant-numeric: tabular-nums; font-size: 1.1rem; }
-.turn-bar.low { border-color: #ff7b5c; }
-.turn-bar.low .turn-clock { color: #ff7b5c; animation: hintPulse 1s ease-in-out infinite; }
+      <div id="settingsTabs" class="mode-switch tabs3" role="group" aria-label="Type de partie">
+        <button type="button" data-tab="ai" class="active">🤖 Ordinateur</button>
+        <button type="button" data-tab="local">👥 2 joueurs</button>
+        <button type="button" data-tab="online">🌍 En ligne</button>
+      </div>
 
-/* ---------- Boutons Indice et Annuler ---------- */
-.ai-actions { display: flex; justify-content: space-around; gap: 12px; margin-top: 16px; }
-.ai-actions[hidden] { display: none; }
-.action-btn {
-  position: relative;
-  display: grid;
-  justify-items: center;
-  gap: 6px;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: #f3e6c8;
-  font-weight: 800;
-  font-size: 0.95rem;
-  cursor: pointer;
-}
-.action-btn .act-ico {
-  width: 68px;
-  height: 68px;
-  display: grid;
-  place-items: center;
-  border-radius: 18px;
-  font-size: 34px;
-  background: linear-gradient(180deg, #f6a63a, #d9701a);
-  border: 2px solid #7a3c0a;
-  box-shadow: 0 4px 0 #7a3c0a;
-}
-.action-btn:active .act-ico { transform: translateY(3px); box-shadow: 0 1px 0 #7a3c0a; }
-.action-btn .act-cost {
-  position: absolute;
-  top: -10px;
-  right: -16px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: #2d1a0c;
-  border: 1px solid #e0a030;
-  font-size: 0.8rem;
-}
-.action-btn.poor .act-cost { color: #ff9a8a; border-color: #ff7b5c; }
-.action-btn:disabled { opacity: 0.4; filter: grayscale(0.5); cursor: not-allowed; }
+      <h3>Couleur des pions</h3>
+      <div id="pawnChoices" class="choice-row"></div>
 
-/* ---------- Message temporaire ---------- */
-.toast {
-  position: fixed;
-  left: 50%;
-  bottom: max(90px, calc(env(safe-area-inset-bottom) + 80px));
-  transform: translateX(-50%);
-  z-index: 90;
-  max-width: calc(100% - 32px);
-  padding: 10px 16px;
-  border-radius: 14px;
-  background: #2d1a0c;
-  border: 1px solid #e0a030;
-  color: #f3e6c8;
-  font-weight: 800;
-  text-align: center;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-}
-.toast[hidden] { display: none; }
+      <h3>Couleur du plateau</h3>
+      <div id="boardChoices" class="choice-row"></div>
 
-/* ---------- Accueil : barre du bas à 4 boutons ---------- */
-.home-bottom { grid-template-columns: repeat(4, 1fr); }
-.home-bottom button { font-size: 0.78rem; }
+      <h3>⏳ Temps de réflexion par tour</h3>
+      <select id="timerSelect" class="mode-select"></select>
 
-/* ---------- Fenêtre Réglages ---------- */
-.settings-card { max-height: 90vh; max-height: 90dvh; overflow: auto; }
-.settings-card h3 { margin: 10px 0 2px; font-size: 1rem; color: var(--accent); }
-.choice-row { display: flex; flex-wrap: wrap; gap: 8px; }
-.choice {
-  display: grid;
-  justify-items: center;
-  gap: 5px;
-  min-width: 86px;
-  padding: 8px 10px;
-  border-radius: 14px;
-  border: 2px solid rgba(224, 160, 48, 0.25);
-  background: rgba(0, 0, 0, 0.25);
-  color: #f3e6c8;
-  font-size: 0.78rem;
-  font-weight: 800;
-  cursor: pointer;
-}
-.choice.active { border-color: #e0a030; background: rgba(224, 160, 48, 0.18); }
-.swatch-pawns { display: flex; gap: 4px; }
-.swatch-pawns i { display: block; width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(0, 0, 0, 0.45); }
-.swatch-board { display: block; width: 56px; height: 26px; border-radius: 8px; border: 2px solid transparent; }
-.setting-row { display: grid; gap: 6px; font-weight: 800; font-size: 0.9rem; }
-.setting-note { margin: 4px 0 0; color: var(--muted); font-size: 0.8rem; line-height: 1.4; }
+      <h3>📏 Règle : retour arrière</h3>
+      <select id="ruleSelect" class="mode-select"></select>
+      <p class="setting-note">Les règles s'appliquent à la prochaine partie. Un pion ne peut alors aller qu'en avant, à gauche ou à droite.</p>
+      <p id="settingsNote" class="setting-note" hidden>En ligne, le temps choisi par celui qui crée la partie s'applique aux deux joueurs. Les couleurs restent personnelles.</p>
 
-@media (prefers-reduced-motion: reduce) {
-  .board .cell.hint-to,
-  .turn-bar.low .turn-clock { animation: none; }
-}
+      <button id="settingsClose" class="button primary" type="button">Terminer</button>
+    </div>
+  </div>
 
+  <!-- Boutique de cauris -->
+  <div id="shopSheet" class="sheet" hidden>
+    <div class="sheet-card shop-card" role="dialog" aria-modal="true" aria-labelledby="shopTitle">
+      <h2 id="shopTitle">🛒 Boutique de cauris</h2>
+      <div class="shop-balance"><span class="cowrie" aria-hidden="true"></span><span class="coin-value">100</span></div>
+      <p id="shopPurchased" class="shop-note" hidden></p>
+      <div id="accountBox" class="account-box" hidden>
+        <p id="accountStatus" class="shop-note"></p>
+        <button id="accountSignIn" class="button secondary" type="button" hidden>Se connecter avec Google</button>
+        <button id="accountSignOut" class="button secondary" type="button" hidden>Se déconnecter</button>
+      </div>
+      <div id="shopPacks" class="shop-packs"></div>
+      <p class="shop-note">Les cauris servent à demander un indice ou à annuler un coup contre l'ordinateur. Tu en gagnes aussi en battant l'ordinateur et avec le bonus du jour.</p>
+      <button id="shopClose" class="button primary" type="button">Fermer</button>
+    </div>
+  </div>
+  <div id="toast" class="toast" role="status" hidden></div>
 
-/* =====================================================
-   CAURIS (monnaie du jeu), boutique, annonces sur le plateau,
-   réglages par type de partie
-   ===================================================== */
+  <!-- ===== JEU EN LIGNE ===== -->
+  <section id="onlineScreen" class="screen" aria-label="Jeu en ligne">
+    <div class="screen-top">
+      <button id="onlineBackBtn" class="icon-btn" type="button" aria-label="Retour à l'accueil">←</button>
+      <h2>Jeu en ligne</h2>
+      <span class="screen-top-spacer" aria-hidden="true"></span>
+    </div>
 
-/* ---------- Cauri : coquillage dessiné en SVG ---------- */
-.cowrie {
-  display: inline-block;
-  width: 0.78em;
-  height: 1.05em;
-  vertical-align: -0.18em;
-  background: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 48 64%22%3E%0A%3Cdefs%3E%3CradialGradient id=%22g%22 cx=%2238%25%22 cy=%2228%25%22 r=%2285%25%22%3E%3Cstop offset=%220%22 stop-color=%22%23fffdf5%22/%3E%3Cstop offset=%22.55%22 stop-color=%22%23efdcb4%22/%3E%3Cstop offset=%221%22 stop-color=%22%23b8975a%22/%3E%3C/radialGradient%3E%3C/defs%3E%0A%3Cellipse cx=%2224%22 cy=%2233%22 rx=%2219%22 ry=%2228%22 fill=%22url(%23g)%22 stroke=%22%238a6a32%22 stroke-width=%222.2%22/%3E%0A%3Cellipse cx=%2217%22 cy=%2222%22 rx=%225%22 ry=%228%22 fill=%22%23ffffff%22 opacity=%22.35%22/%3E%0A%3Cpath d=%22M24 8 C19.5 22 19.5 44 24 58 C28.5 44 28.5 22 24 8 Z%22 fill=%22%234a2c0f%22/%3E%0A%3Cg stroke=%22%23fff8e6%22 stroke-width=%221.7%22 stroke-linecap=%22round%22%3E%3Cpath d=%22M21.0 15 L27.0 15%22/%3E%3Cpath d=%22M20.3 19 L27.7 19%22/%3E%3Cpath d=%22M19.6 23 L28.4 23%22/%3E%3Cpath d=%22M19.2 27 L28.8 27%22/%3E%3Cpath d=%22M19.0 31 L29.0 31%22/%3E%3Cpath d=%22M19.1 35 L28.9 35%22/%3E%3Cpath d=%22M19.4 39 L28.6 39%22/%3E%3Cpath d=%22M19.9 43 L28.1 43%22/%3E%3Cpath d=%22M20.6 47 L27.4 47%22/%3E%3Cpath d=%22M21.5 51 L26.5 51%22/%3E%3C/g%3E%0A%3C/svg%3E") center / contain no-repeat;
-}
-button.coin-chip { cursor: pointer; font: inherit; font-weight: 900; color: #f3e6c8; }
-button.coin-chip:active { transform: translateY(2px); box-shadow: none; }
-.coin-chip .cowrie { font-size: 1.25rem; }
-.coin-plus {
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #e0a030;
-  color: #2a1608;
-  font-weight: 900;
-  line-height: 1;
-}
-.act-cost .cowrie { font-size: 0.95em; margin-right: 3px; }
+    <div class="mode-switch" role="group" aria-label="Mode de jeu">
+      <button type="button" data-mode="classic" class="active" aria-pressed="true">Mode 1 · Classique</button>
+      <button type="button" data-mode="custom" aria-pressed="false">Mode 2 · Personnalisé</button>
+    </div>
 
-/* ---------- Annonces stylées sur le plateau ---------- */
-#boardAnnounce {
-  position: fixed;
-  z-index: 75;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  display: grid;
-  place-items: center;
-  max-width: 94vw;
-}
-#boardAnnounce[hidden] { display: none; }
-.ann-card {
-  position: relative;
-  box-sizing: border-box;
-  min-width: 220px;
-  max-width: 100%;
-  padding: 24px 24px 18px 52px;
-  border-radius: 22px;
-  text-align: center;
-  background: rgba(45, 26, 12, 0.94);
-  border: 3px solid #e0a030;
-  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.35), 0 18px 40px rgba(0, 0, 0, 0.6);
-}
-.ann-card::before,
-.ann-card::after {
-  content: "";
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  height: 7px;
-  border-radius: 4px;
-  background: repeating-linear-gradient(45deg, #e0a030 0 6px, #c4532a 6px 12px, #1c110a 12px 18px);
-}
-.ann-card::before { top: 8px; }
-.ann-card::after { bottom: 8px; }
-.ann-text {
-  display: block;
-  font-weight: 900;
-  font-size: clamp(2rem, 11vw, 3.3rem);
-  line-height: 1.05;
-  letter-spacing: 0.04em;
-  color: #fff3d2;
-  -webkit-text-stroke: 2px #5a2a0a;
-  paint-order: stroke fill;
-  text-shadow: 0 4px 0 #b8431c, 0 10px 18px rgba(0, 0, 0, 0.55);
-}
-.ann-sub { display: block; margin-top: 6px; font-weight: 800; font-size: 0.95rem; color: #f0d9a8; }
-.ann-sticker {
-  position: absolute;
-  left: -20px;
-  top: -24px;
-  width: 66px;
-  height: 66px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: #fff7e6;
-  border: 4px solid #ffffff;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5), 0 0 0 3px #5a2a0a;
-  font-size: 36px;
-  transform: rotate(-12deg);
-}
-#boardAnnounce.tone-souffle .ann-card { border-color: #ff8a5c; }
-#boardAnnounce.tone-souffle .ann-text { text-shadow: 0 4px 0 #a02a0c, 0 10px 18px rgba(0, 0, 0, 0.55); }
-#boardAnnounce.tone-win .ann-card { border-color: #f6c14e; }
-#boardAnnounce.tone-win .ann-text { color: #fff1b0; text-shadow: 0 4px 0 #b8860b, 0 10px 18px rgba(0, 0, 0, 0.55); }
-#boardAnnounce.tone-draw .ann-card { border-color: #9bb4c9; }
-#boardAnnounce.tone-draw .ann-text { text-shadow: 0 4px 0 #44627d, 0 10px 18px rgba(0, 0, 0, 0.55); }
-#boardAnnounce.tone-lose .ann-card { border-color: #8a7a6a; }
-#boardAnnounce.tone-lose .ann-text { text-shadow: 0 4px 0 #3a2a1c, 0 10px 18px rgba(0, 0, 0, 0.55); }
-.ann-card.pop { animation: annPop 0.55s cubic-bezier(0.2, 1.5, 0.4, 1) both; }
-.ann-card.out { animation: annOut 0.4s ease-in both; }
-@keyframes annPop {
-  0% { transform: scale(0.3) rotate(-8deg); opacity: 0; }
-  60% { transform: scale(1.08) rotate(2deg); opacity: 1; }
-  100% { transform: scale(1) rotate(0); opacity: 1; }
-}
-@keyframes annOut { to { transform: scale(0.9); opacity: 0; } }
+    <section id="onlinePanel" class="mode-picker">
+      <button id="quickMatchBtn" class="button" type="button">
+        ⚡ Trouver un adversaire
+      </button>
+      <button id="cancelQuickBtn" class="button secondary" type="button" hidden>
+        Annuler la recherche
+      </button>
 
-/* ---------- Réglages : onglets par type de partie ---------- */
-.tabs3 { grid-template-columns: repeat(3, 1fr); }
-.tabs3 button { font-size: 0.8rem; padding: 10px 4px; }
+      <p class="online-sep">Ou joue avec un ami grâce à un code</p>
 
-/* ---------- Boutique ---------- */
-.shop-balance { display: flex; justify-content: center; align-items: center; gap: 8px; font-size: 1.5rem; font-weight: 900; }
-.shop-balance .cowrie { font-size: 1.7rem; }
-.shop-packs { display: grid; gap: 10px; }
-.shop-pack {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 16px;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(224, 160, 48, 0.35);
-}
-.shop-pack .pack-icons { display: flex; font-size: 1.4rem; min-width: 52px; }
-.shop-pack .pack-icons .cowrie { margin-right: -6px; }
-.shop-pack .pack-name { display: block; font-weight: 900; }
-.shop-pack .pack-amount { display: block; color: #e0a030; font-weight: 800; font-size: 0.9rem; }
-.shop-pack .pack-tag {
-  display: inline-block;
-  margin-left: 6px;
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: #c4532a;
-  color: #fff3d2;
-  font-size: 0.7rem;
-  font-weight: 800;
-}
-.shop-pack .buy {
-  padding: 10px 14px;
-  border: 0;
-  border-radius: 12px;
-  background: linear-gradient(180deg, #f6c14e, #d48a1c);
-  color: #2a1608;
-  font-weight: 900;
-  cursor: pointer;
-  box-shadow: 0 3px 0 #7a4b0c;
-}
-.shop-pack .buy:active { transform: translateY(2px); box-shadow: none; }
-.shop-note { margin: 4px 0 0; color: var(--muted); font-size: 0.8rem; line-height: 1.4; }
+      <button id="createRoomBtn" class="button" type="button">
+        Créer une partie
+      </button>
 
-@media (prefers-reduced-motion: reduce) {
-  .ann-card.pop, .ann-card.out { animation: none; }
-}
+      <div class="online-join">
+        <label for="roomCode">Code d'invitation</label>
+        <input id="roomCode" type="text" placeholder="Entrer le code">
+        <button id="joinRoomBtn" class="button secondary" type="button">
+          Rejoindre
+        </button>
+      </div>
 
-/* ---------- Compte joueur (boutique) ---------- */
-.account-box { display: grid; gap: 8px; text-align: center; }
-.account-box[hidden] { display: none; }
-#shopPurchased[hidden] { display: none; }
-#shopPurchased { text-align: center; margin: -4px 0 0; }
+      <div id="invitationArea" hidden>
+        <p>Code : <strong id="invitationCode"></strong></p>
+        <button id="copyInvitationBtn" class="button secondary" type="button">
+          Copier le code
+        </button>
+        <button id="shareInvitationBtn" class="button secondary" type="button">
+          Partager le lien
+        </button>
+      </div>
+
+      <p id="onlineStatus">Mode hors ligne</p>
+    </section>
+  </section>
+
+  <main class="app">
+    <div class="game-topbar">
+      <button id="gameBackBtn" class="icon-btn" type="button" aria-label="Retour à l'accueil">←</button>
+      <button class="icon-btn" type="button" data-open-settings aria-label="Réglages">⚙️</button>
+      <h2 id="gameTitle">Mode 1 · Classique</h2>
+      <div class="topbar-right">
+        <button id="gameCoins" class="coin-chip" type="button" data-open-shop aria-label="Boutique de cauris" hidden><span class="cowrie" aria-hidden="true"></span><span class="coin-value">100</span><span class="coin-plus" aria-hidden="true">+</span></button>
+        <button class="icon-btn" type="button" data-open-rules aria-label="Règles du jeu">📜</button>
+      </div>
+    </div>
+    <p id="gameBanner" class="game-banner" hidden></p>
+
+    <div id="turnBar" class="turn-bar" hidden>
+      <span id="turnClock" class="turn-clock">⏳ 0:00</span>
+      <span id="turnWho" class="turn-who"></span>
+    </div>
+    <div id="aiActions" class="ai-actions" hidden>
+      <button id="hintBtn" class="action-btn" type="button">
+        <span class="act-ico" aria-hidden="true">💡</span>
+        <span class="act-cost"><span class="cowrie" aria-hidden="true"></span>10</span>
+        <span class="act-label">Indice</span>
+      </button>
+      <button id="undoBtn" class="action-btn" type="button">
+        <span class="act-ico" aria-hidden="true">↩️</span>
+        <span class="act-cost"><span class="cowrie" aria-hidden="true"></span>40</span>
+        <span class="act-label">Annuler</span>
+      </button>
+    </div>
+
+    <section id="classicGame" class="game-layout" aria-label="Jeu classique">
+      <div class="board-panel">
+        <div class="board-heading">
+          <div>
+            <p class="eyebrow">PLATEAU</p>
+            <h2>5 × 5</h2>
+          </div>
+          <div class="heading-actions"><label class="mode-toggle"><input id="aiMode" type="checkbox"> Jouer contre l’IA</label><label class="ai-difficulty-wrap hidden" id="classicDifficultyWrap">Difficulté <select id="classicDifficulty" class="mode-select"><option value="easy">Facile</option><option value="medium" selected>Moyen</option><option value="hard">Difficile</option></select></label><button id="restartBtn" class="button secondary" type="button">↻ Recommencer</button></div>
+        </div>
+        <div id="board" class="board" role="grid" aria-label="Plateau de jeu 5 par 5"></div>
+        <p class="board-tip">Touchez un de vos pions, puis une case possible en vert.</p>
+      </div>
+
+      <aside class="side-panel">
+        <section class="status-card">
+          <p class="eyebrow">TOUR ACTUEL</p>
+          <div class="turn-line">
+            <span id="turnStone" class="turn-stone white"></span>
+            <h2 id="turnLabel">Aux Blancs de jouer</h2>
+          </div>
+          <p id="statusText" class="status-text" aria-live="polite">Sélectionnez un pion blanc pour commencer.</p>
+          <div id="sanctionBox" class="sanction-box hidden">
+            <strong>Sanction de capture refusée</strong>
+            <p>Choisissez le pion qui pouvait capturer et que l'adversaire va retirer.</p>
+            <div id="sanctionChoices" class="sanction-choices"></div>
+          </div>
+        </section>
+
+        <section class="score-card">
+          <p class="eyebrow">SCORE</p>
+          <div class="score-row">
+            <div class="player-label"><span class="mini-stone black"></span><span>Noirs</span></div>
+            <strong id="blackCount">12</strong>
+          </div>
+          <div class="meter"><span id="blackMeter" class="meter-black"></span></div>
+          <p class="score-sub">Captures réussies : <span id="blackCaptures">0</span> / 12</p>
+          <div class="score-row">
+            <div class="player-label"><span class="mini-stone white"></span><span>Blancs</span></div>
+            <strong id="whiteCount">12</strong>
+          </div>
+          <div class="meter"><span id="whiteMeter" class="meter-white"></span></div>
+          <p class="score-sub">Captures réussies : <span id="whiteCaptures">0</span> / 12</p>
+        </section>
+
+        <p class="fine-print">Version de test · Deux joueurs ou contre l’IA · Roi à déplacement longue distance · Aucune inscription nécessaire.</p>
+      </aside>
+    </section>
+
+    <section id="customGame" class="custom-game hidden" aria-label="Mode personnalisé">
+      <div class="custom-main">
+        <div class="board-panel">
+          <div class="board-heading"><div><p class="eyebrow">MODE PERSONNALISÉ</p><h2>Plateau 5 × 5</h2></div><button id="customRestart" class="button secondary" type="button">↻ Recommencer</button></div>
+          <p id="bonusTimer" class="bonus-timer">⏳ Temps restant : 30 s</p>
+          <div id="customBoard" class="board" role="grid" aria-label="Plateau personnalisé"></div>
+          <p id="customHint" class="board-tip"></p>
+        </div>
+
+        <aside class="side-panel">
+          <section class="status-card">
+            <p class="eyebrow" id="customPhase">Phase de placement</p>
+            <h2 id="customTurn">Placement : Blancs</h2>
+            <p id="customStatus" class="status-text" aria-live="polite"></p>
+
+            <div id="bonusPanel" class="status-card hidden">
+              <strong>Retrait du pion bonus</strong>
+              <p>Choisissez un pion adverse supplémentaire à retirer.</p>
+              <div id="bonusChoices"></div>
+            </div>
+
+            <label class="custom-label" for="customOpponent">Adversaire</label>
+            <select id="customOpponent" class="mode-select"><option value="human">Deux joueurs sur cet appareil</option><option value="ai">Contre l’ordinateur</option></select>
+            <label class="custom-label hidden" id="customDifficultyWrap" for="customDifficulty">Difficulté de l’ordinateur</label>
+            <select id="customDifficulty" class="mode-select hidden"><option value="easy">Facile</option><option value="medium" selected>Moyen</option><option value="hard">Difficile</option></select>
+
+            <div id="bonusTimerSettings">
+              <label class="custom-label" for="bonusTimerMode">
+                Temps de choix des pions bonus
+              </label>
+              <select id="bonusTimerMode" class="mode-select">
+                <option value="0" selected>Désactivé</option>
+                <option value="20">20 secondes</option>
+                <option value="30">30 secondes</option>
+                <option value="40">40 secondes</option>
+              </select>
+            </div>
+          </section>
+
+          <section class="score-card"><p class="eyebrow">PIONS RESTANTS</p><div class="score-row"><span>Noirs</span><strong id="customBlackCount">12</strong></div><p class="score-sub">Captures : <span id="customBlackCap">0</span></p><div class="score-row"><span>Blancs</span><strong id="customWhiteCount">12</strong></div><p class="score-sub">Captures : <span id="customWhiteCap">0</span></p></section>
+        </aside>
+      </div>
+    </section>
+
+    <footer>© XIDATA XOORE · Modes classique et personnalisé</footer>
+  </main>
+
+  <!-- Fenêtre des règles (séparée du plateau) -->
+  <div id="rulesModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
+    <div class="modal-card rules-modal-card">
+      <p class="eyebrow">RÈGLES DU JEU</p>
+      <h2 id="rulesTitle">Comment jouer</h2>
+
+      <section id="rulesClassic" class="rules-card">
+        <p class="eyebrow">MODE 1 — CLASSIQUE</p>
+        <ol>
+          <li>Déplacez un pion d'une case vers l'avant, l'arrière, la gauche ou la droite, vers une case vide.</li>
+          <li>Un pion simple capture en sautant par-dessus un pion adverse adjacent vers la case vide juste derrière.</li>
+          <li>Un pion qui atteint la rangée opposée devient un roi, marqué par le symbole ♛.</li>
+          <li>Le roi peut se déplacer sans capture sur plusieurs cases libres, horizontalement ou verticalement. Il peut aussi capturer de près ou de loin en sautant un pion adverse et en atterrissant sur une case vide derrière lui.</li>
+          <li>La capture est obligatoire si elle est possible, mais le maximum de captures n’est pas imposé : vous choisissez librement parmi les captures disponibles. Si vous commencez une chaîne avec ce pion, vous devez la terminer jusqu’à sa destination finale.</li>
+          <li><strong>Sanction :</strong> si vous faites un déplacement normal alors qu'une capture était possible, l'adversaire choisit et retire un pion qui pouvait capturer.</li>
+          <li>Gagnez en capturant les 12 pions adverses ou en bloquant tous les mouvements légaux adverses.</li>
+        </ol>
+      </section>
+
+      <section id="rulesCustom" class="rules-card hidden">
+        <p class="eyebrow">MODE 2 — PERSONNALISÉ</p>
+        <ol>
+          <li>Chaque joueur place 12 pions à tour de rôle. La case centrale reste vide.</li>
+          <li>Les Noirs commencent après le placement.</li>
+          <li>Aucun roi : tous les pions gardent le même mouvement.</li>
+          <li>Déplacement d’une case horizontalement ou verticalement vers une case vide.</li>
+          <li>Capture en sautant un pion adverse adjacent vers la case libre derrière.</li>
+          <li>La capture est facultative. Pour chaque pion capturé, un pion adverse supplémentaire doit être retiré au choix du joueur. L'ordinateur choisit automatiquement.</li>
+          <li>Si vous commencez une chaîne de captures avec un pion, vous devez la terminer jusqu’à sa destination finale.</li>
+          <li>Gagnez en capturant les 12 pions adverses.</li>
+        </ol>
+      </section>
+
+      <section class="rules-card">
+        <p class="eyebrow">OPTIONS (⚙️ RÉGLAGES)</p>
+        <ol>
+          <li><strong>Pas de retour arrière :</strong> un pion ne peut plus reculer. Il va en avant, à gauche ou à droite. Au choix : seulement pour les déplacements, ou aussi pour les captures. Les Blancs avancent vers le haut du plateau, les Noirs vers le bas. Au Mode 1, un roi reste libre de ses mouvements.</li>
+        </ol>
+      </section>
+
+      <button id="rulesCloseBtn" class="button primary" type="button">Fermer</button>
+    </div>
+  </div>
+
+  <div id="endModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="endTitle">
+    <div class="modal-card">
+      <div class="trophy">★</div>
+      <p class="eyebrow">PARTIE TERMINÉE</p>
+      <h2 id="endTitle">Victoire !</h2>
+      <p id="endMessage"></p>
+      <button id="playAgainBtn" class="button primary" type="button">Nouvelle partie</button>
+    </div>
+  </div>
+  <div id="customEndModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="customEndTitle">
+    <div class="modal-card">
+      <div class="trophy">★</div>
+      <p class="eyebrow">PARTIE TERMINÉE</p>
+      <h2 id="customEndTitle">Victoire !</h2>
+      <p id="customEndMessage"></p>
+      <button id="customPlayAgain" class="button primary" type="button">Nouvelle partie</button>
+    </div>
+  </div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-functions-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics-compat.js"></script>
+<script src="firebase.js"></script>
+<script src="online.js"></script>
+<script src="game-online-sync.js"></script>
+  <script>
+    const modePicker = document.querySelector('#gameMode');
+    const loadedModes = {};
+    function switchMode() {
+      const mode = modePicker.value;
+      document.querySelector('#classicGame').classList.toggle('hidden', mode !== 'classic');
+      document.querySelector('#customGame').classList.toggle('hidden', mode !== 'custom');
+      // Chaque mode n'est chargé qu'une seule fois (sinon ses variables seraient déclarées deux fois)
+      if (loadedModes[mode]) return;
+      loadedModes[mode] = true;
+      const script = document.createElement('script');
+      script.src = mode === 'classic' ? 'game.js' : 'mode2.js';
+      document.body.appendChild(script);
+    }
+    modePicker.addEventListener('change', switchMode);
+    switchMode();
+  </script>
+  <script>
+    // Fenêtre des règles (boutons "Règles" de l'accueil et du jeu)
+    (function () {
+      const modal = document.querySelector('#rulesModal');
+      const closeBtn = document.querySelector('#rulesCloseBtn');
+      let opener = null;
+
+      function openRules(event) {
+        opener = event && event.currentTarget;
+        const mode = document.querySelector('#gameMode').value;
+        document.querySelector('#rulesClassic').classList.toggle('hidden', mode !== 'classic');
+        document.querySelector('#rulesCustom').classList.toggle('hidden', mode !== 'custom');
+        modal.classList.remove('hidden');
+        closeBtn.focus();
+      }
+      function closeRules() {
+        modal.classList.add('hidden');
+        if (opener) opener.focus();
+      }
+
+      document.querySelectorAll('[data-open-rules]').forEach(btn => btn.addEventListener('click', openRules));
+      closeBtn.addEventListener('click', closeRules);
+      modal.addEventListener('click', e => { if (e.target === modal) closeRules(); });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeRules();
+      });
+    })();
+  </script>
+  <script src="sounds.js"></script>
+  <script src="home.js"></script>
+  <script src="stats.js"></script>
+  <script src="analytics.js"></script>
+  <script src="wallet.js"></script>
+  <script src="extras.js"></script>
+  <script>
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+
+    // Dans le navigateur web : activer le Service Worker
+    // (pas dans l'application Android / iOS faite avec Capacitor)
+    const isAndroidApp =
+      window.location.protocol === "capacitor:" ||
+      window.location.protocol === "app:" ||
+      !!(window.Capacitor &&
+         typeof window.Capacitor.isNativePlatform === "function" &&
+         window.Capacitor.isNativePlatform());
+
+    if (!isAndroidApp) {
+      navigator.serviceWorker.register("./service-worker.js")
+        .then(() => console.log("XIDATA PWA activée"))
+        .catch(error =>
+          console.error("Erreur PWA :", error)
+        );
+    }
+
+  });
+}
+  </script>
+</body>
+</html>
