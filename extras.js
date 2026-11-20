@@ -107,8 +107,34 @@
     refreshCoins();
   }
   const addCoins = amount => setCoins(coins + amount);
+  // Cauris achetés : gardés par le serveur (voir wallet.js)
+  const walletPurchased = () => (window.xidataWallet ? Number(window.xidataWallet.purchased()) || 0 : 0);
+  const totalCoins = () => coins + walletPurchased();
   function refreshCoins() {
-    $$(".coin-value").forEach(el => { el.textContent = String(coins); });
+    $$(".coin-value").forEach(el => { el.textContent = String(totalCoins()); });
+    const bought = $("#shopPurchased");
+    if (bought) {
+      const n = walletPurchased();
+      bought.hidden = n <= 0;
+      bought.textContent = "dont " + n + " cauris achetés";
+    }
+  }
+
+  // Paie avec les cauris gagnés d'abord (immédiat), sinon avec les cauris achetés (via le serveur)
+  function charge(cost, onPaid) {
+    if (coins >= cost) {
+      setCoins(coins - cost);
+      onPaid();
+      return;
+    }
+    const wallet = window.xidataWallet;
+    if (wallet && wallet.purchased() >= cost) {
+      wallet.spend(cost)
+        .then(ok => { if (ok) onPaid(); else toast("Paiement refusé : réessaie."); })
+        .catch(() => toast("Connexion impossible : réessaie."));
+      return;
+    }
+    toast("Pas assez de cauris {c}");
   }
 
   /* =====================================================
@@ -138,25 +164,28 @@
   /* =====================================================
      Boutique de cauris
      ===================================================== */
-  // Les achats en argent réel demandent un service de paiement (voir PAYMENT).
+  // Les achats en argent réel passent par le serveur (functions/) : voir wallet.js
   const PACKS = [
     { id: "small",  name: "Poignée de cauris", amount: 100,  price: "0,99 €", shells: 1 },
     { id: "medium", name: "Sac de cauris",     amount: 550,  price: "3,99 €", shells: 2, tag: "Populaire" },
     { id: "large",  name: "Coffre de cauris",  amount: 1400, price: "8,99 €", shells: 3, tag: "Meilleure offre" }
   ];
-  const PAYMENT = {
-    enabled: false, // passe à true quand un service de paiement est branché
-    links: { small: "", medium: "", large: "" } // lien de paiement de chaque pack
-  };
-
   function buyPack(pack) {
-    const link = PAYMENT.links[pack.id];
-    if (!PAYMENT.enabled || !link) {
+    const wallet = window.xidataWallet;
+    if (wallet && wallet.isNative()) {
+      // Dans l'application Android, Google impose son propre système d'achat (Google Play)
+      toast("🛒 Les achats dans l'application Android arrivent bientôt (Google Play).");
+      return false;
+    }
+    if (!wallet || !wallet.enabled) {
       toast("🛒 Les achats ne sont pas encore ouverts. Reviens bientôt !");
       return false;
     }
-    window.open(link, "_blank", "noopener");
-    toast("Paiement ouvert dans ton navigateur.");
+    toast("Ouverture du paiement…");
+    wallet.buy(pack.id).catch(error => {
+      if (error && error.code === "needs-login") toast("Connecte-toi avec Google pour acheter (bouton plus bas).");
+      else toast("Paiement impossible pour le moment : réessaie.");
+    });
     return true;
   }
 
@@ -675,8 +704,8 @@
     const undoBtn = $("#undoBtn");
     hintBtn.disabled = !mine;
     undoBtn.disabled = !mine || !A.stable() || undoTarget(A) < 0;
-    hintBtn.classList.toggle("poor", coins < COST.hint);
-    undoBtn.classList.toggle("poor", coins < COST.undo);
+    hintBtn.classList.toggle("poor", totalCoins() < COST.hint);
+    undoBtn.classList.toggle("poor", totalCoins() < COST.undo);
   }
 
   /* =====================================================
@@ -781,13 +810,14 @@
   function onHint() {
     const A = currentAdapter();
     if (!A.ready() || !canAct(A)) return;
-    if (coins < COST.hint) { toast("Pas assez de cauris {c}"); return; }
     const sug = A.suggest(WHITE);
     if (!sug) { toast("Aucun indice disponible."); return; }
-    setCoins(coins - COST.hint);
-    hint = { key: A.turnKey(), from: sug.from, to: sug.to };
-    applyHint(A);
-    toast("💡 Regarde les cases entourées en bleu");
+    const key = A.turnKey();
+    charge(COST.hint, () => {
+      hint = { key, from: sug.from, to: sug.to };
+      applyHint(A);
+      toast("💡 Regarde les cases entourées en bleu");
+    });
   }
 
   function onUndo() {
@@ -795,13 +825,13 @@
     if (!A.ready() || !canAct(A) || !A.stable()) return;
     const index = undoTarget(A);
     if (index < 0) { toast("Rien à annuler."); return; }
-    if (coins < COST.undo) { toast("Pas assez de cauris {c}"); return; }
     const snap = stacks[A.mode][index].snap;
-    setCoins(coins - COST.undo);
-    stacks[A.mode].length = index;
-    hint = null;
-    A.restore(snap);
-    toast("↩ Coup annulé");
+    charge(COST.undo, () => {
+      stacks[A.mode].length = index;
+      hint = null;
+      A.restore(snap);
+      toast("↩ Coup annulé");
+    });
   }
 
   /* =====================================================
@@ -949,6 +979,8 @@
   if (undoBtn) undoBtn.addEventListener("click", onUndo);
 
   dailyBonus();
+  if (window.xidataPurchaseReturn === "ok") toast("✅ Paiement reçu ! Tes cauris arrivent dans quelques secondes {c}");
+  else if (window.xidataPurchaseReturn === "annule") toast("Achat annulé : rien n'a été débité.");
   setInterval(tick, 250);
 
   // Utilisé par online.js (temps de réflexion de la salle) et pour les tests
@@ -957,7 +989,7 @@
     getRules: ctx => ({ noBack: (profiles[ctx] && profiles[ctx].rules.noBack) || "off" })
   };
   window.xidataExtras = {
-    tick, coins: () => coins, setCoins, settings, profiles, stacks, announce, buyPack, PAYMENT,
+    tick, coins: () => coins, total: totalCoins, setCoins, settings, profiles, stacks, announce, buyPack, toast,
     adapters: { classic, custom }
   };
 })();
