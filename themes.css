@@ -379,3 +379,9 @@ button.coin-chip:active { transform: translateY(2px); box-shadow: none; }
 @media (prefers-reduced-motion: reduce) {
   .ann-card.pop, .ann-card.out { animation: none; }
 }
+
+/* ---------- Compte joueur (boutique) ---------- */
+.account-box { display: grid; gap: 8px; text-align: center; }
+.account-box[hidden] { display: none; }
+#shopPurchased[hidden] { display: none; }
+#shopPurchased { text-align: center; margin: -4px 0 0; }
