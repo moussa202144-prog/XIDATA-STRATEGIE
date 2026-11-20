@@ -1,13 +1,15 @@
-name: Build XIDATA Android
+name: Deployer le serveur d'achats (Firebase Functions)
 
 on:
   workflow_dispatch:
   push:
-    branches:
-      - android-app
+    paths:
+      - "functions/**"
+      - "firebase.json"
+      - ".github/workflows/deploy-functions.yml"
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,146 +19,48 @@ jobs:
       - name: Installer Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
 
-      - name: Installer Java
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: 21
-
-      - name: Installer les dependances
-        run: npm install
-
-      - name: Verifier Capacitor
-        run: npx cap config
-
-      - name: Preparer le jeu
-        run: npm run build
-
-      - name: Creer le projet Android
-        run: npx cap add android
-
-      - name: Generer les icones Android
-        run: npx @capacitor/assets generate --android
-
-      - name: Synchroniser Capacitor
-        run: npx cap sync android
-
-      # La signature permanente est facultative : sans les 3 secrets,
-      # seule la version debug est compilee (elle s'installe sur un telephone).
-      - name: Verifier la signature permanente
-        id: signcheck
+      - name: Verifier les secrets
         env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          SITE_URL: ${{ secrets.SITE_URL }}
         run: |
           missing=""
-          [ -n "$ANDROID_KEYSTORE_BASE64" ]   || missing="$missing ANDROID_KEYSTORE_BASE64"
-          [ -n "$ANDROID_KEYSTORE_PASSWORD" ] || missing="$missing ANDROID_KEYSTORE_PASSWORD"
-          [ -n "$ANDROID_KEY_ALIAS" ]         || missing="$missing ANDROID_KEY_ALIAS"
-
-          echo "Taille de ANDROID_KEYSTORE_BASE64 : ${#ANDROID_KEYSTORE_BASE64} caracteres"
-
-          if [ -z "$missing" ]; then
-            echo "signed=true" >> "$GITHUB_OUTPUT"
-            echo "Signature permanente : activee."
-          else
-            echo "signed=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Secrets introuvables par ce workflow :$missing. Seule la version debug sera compilee."
-          fi
-
-      - name: Installer la signature permanente
-        if: steps.signcheck.outputs.signed == 'true'
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-        run: |
-          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/xidata-release.p12
-          chmod 600 android/app/xidata-release.p12
-
-          # Verification de la cle : mauvais mot de passe, mauvais alias ou fichier incomplet
-          if ! keytool -list -storetype PKCS12 -keystore android/app/xidata-release.p12 \
-               -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias "$ANDROID_KEY_ALIAS" > /dev/null 2>&1; then
-            echo "::error::Cle illisible : verifie le mot de passe, l'alias et le texte base64 des secrets."
+          [ -n "$FIREBASE_SERVICE_ACCOUNT" ] || missing="$missing FIREBASE_SERVICE_ACCOUNT"
+          [ -n "$STRIPE_SECRET_KEY" ]        || missing="$missing STRIPE_SECRET_KEY"
+          [ -n "$STRIPE_WEBHOOK_SECRET" ]    || missing="$missing STRIPE_WEBHOOK_SECRET"
+          [ -n "$SITE_URL" ]                 || missing="$missing SITE_URL"
+          if [ -n "$missing" ]; then
+            echo "::error::Secrets introuvables :$missing (Settings > Secrets and variables > Actions)"
             exit 1
           fi
-          echo "Cle de signature : OK."
+          echo "Secrets : OK"
 
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
+      - name: Installer les dependances du serveur
+        working-directory: functions
+        run: npm install --omit=dev
 
-          path = Path("android/app/build.gradle")
-          content = path.read_text()
-
-          if "signingConfigs {" in content:
-              raise SystemExit("Une configuration de signature existe déjà.")
-
-          signing = """
-              signingConfigs {
-                  release {
-                      storeFile file("xidata-release.p12")
-                      storeType "PKCS12"
-                      storePassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
-                      keyAlias System.getenv("ANDROID_KEY_ALIAS")
-                      keyPassword System.getenv("ANDROID_KEYSTORE_PASSWORD")
-                  }
-              }
-          """
-
-          pattern = r'(?m)^(\s*)buildTypes\s*\{'
-          match = re.search(pattern, content)
-
-          if not match:
-              raise SystemExit("Bloc buildTypes introuvable.")
-
-          indent = match.group(1)
-          signing = signing.replace("\n              ", "\n" + indent + "    ")
-          signing = signing.replace("\n          ", "\n" + indent)
-
-          content = content[:match.start()] + signing + "\n" + content[match.start():]
-
-          pattern = r'(?m)^(\s*buildTypes\s*\{\s*\n)(\s*)release\s*\{'
-          replacement = (
-              r'\1\2release {' +
-              '\n' + r'\2    signingConfig signingConfigs.release'
-          )
-
-          content, count = re.subn(pattern, replacement, content, count=1)
-
-          if count != 1:
-              raise SystemExit("Bloc release introuvable.")
-
-          path.write_text(content)
-          print("Signature permanente configurée.")
-          PY
-
-      - name: Compiler APK
+      - name: Ecrire la configuration du serveur
         env:
-          # Necessaire : build.gradle lit ces valeurs pendant la compilation
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          SITE_URL: ${{ secrets.SITE_URL }}
         run: |
-          chmod +x android/gradlew
-          cd android
-          if [ "${{ steps.signcheck.outputs.signed }}" = "true" ]; then
-            ./gradlew assembleDebug assembleRelease
-          else
-            ./gradlew assembleDebug
-          fi
+          {
+            echo "STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY"
+            echo "STRIPE_WEBHOOK_SECRET=$STRIPE_WEBHOOK_SECRET"
+            echo "SITE_URL=$SITE_URL"
+          } > functions/.env
 
-      - name: Publier APK Release
-        if: steps.signcheck.outputs.signed == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: XIDATA-STRATEGIE-RELEASE
-          path: android/app/build/outputs/apk/release/app-release.apk
+      - name: Cle du compte de service
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-key.json"
 
-      - name: Publier APK Debug
-        uses: actions/upload-artifact@v4
-        with:
-          name: XIDATA-STRATEGIE-DEBUG
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Deployer
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-key.json
+        run: npx --yes firebase-tools@latest deploy --only functions --project xidata-strategie-f598a --non-interactive
