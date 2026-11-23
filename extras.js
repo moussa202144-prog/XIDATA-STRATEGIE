@@ -596,24 +596,7 @@
   /* =====================================================
      Match nul : un pion contre un pion
      ===================================================== */
-  function checkDraw(A, ctx) {
-  // Ne rien faire si la partie est déjà terminée
-  // ou si le match nul n'est pas autorisé.
-  if (A.isOver() || !A.canDraw()) return;
-
-  const c = A.counts();
-  const total = c.black + c.white;
-
-  // Match nul uniquement avec exactement
-  // 1 pion noir et 1 pion blanc.
-  if (total !== 2) return;
-  if (c.black !== 1 || c.white !== 1) return;
-
-  // En ligne, seul l'hôte déclare le match nul.
-  if (ctx === "online" && window.currentRoomRole !== "host") return;
-
-  A.declareDraw();
-  }
+  
 
   /* =====================================================
      Jouer un coup en simulant les touchers sur le plateau
