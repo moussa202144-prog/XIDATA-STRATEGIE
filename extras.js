@@ -36,7 +36,7 @@
       pawns: p.pawns || stored.pawns || "ebony",
       board: p.board || stored.board || "earth",
       timer: Number(p.timer !== undefined ? p.timer : oldTimers[ctx]) || 0,
-      rules: { noBack: (p.rules && p.rules.noBack) || "off" }
+      rules: { noBack: (p.rules && p.rules.noBack) || "off", repeat: (p.rules && p.rules.repeat) || "on" }
     };
   });
   const settings = { profiles, tab: "ai" };
@@ -55,6 +55,11 @@
     ["off", "Désactivée (les pions peuvent reculer)"],
     ["moves", "Pas de retour arrière (déplacements)"],
     ["all", "Pas de retour arrière (déplacements et captures)"]
+  ];
+
+  const REPEAT_OPTIONS = [
+    ["on", "3 répétitions = match nul"],
+    ["off", "Désactivée"]
   ];
 
   // Couleurs des pions : b = pions noirs, w = pions blancs (3 teintes : clair, moyen, foncé)
@@ -244,6 +249,11 @@
      Adaptateurs : un par mode de jeu
      ===================================================== */
 
+  // Identifiant d'une position (Mode 1) : pions, rois et camp qui doit jouer
+  const classicKey = (boardArr, kingSet, side) =>
+    "m1|" + side + "|" + boardArr.map(p => (p ? p[0] : ".")).join("") + "|" +
+    [...kingSet].sort((a, b) => a - b).join(",");
+
   // ----- Mode 1 : Classique (variables et fonctions de game.js) -----
   const classic = {
     mode: "classic",
@@ -273,14 +283,19 @@
       white: board.filter(p => p === WHITE).length
     }),
     canDraw: () => !gameOver && !pendingSanction,
-    declareDraw: () => {
+    declareDraw: reason => {
+      const rep = reason === "repetition";
       gameOver = true;
       selected = null;
-      setStatus("Match nul : il reste un pion de chaque côté.");
+      setStatus(rep ? "Match nul : la même position est revenue 3 fois." : "Match nul : il reste un pion de chaque côté.");
       render();
       if (typeof saveOnlineState === "function") saveOnlineState();
-      showEnd("Match nul", "Il reste un pion contre un pion : la partie est déclarée nulle.");
+      showEnd("Match nul", rep
+        ? "La même position est revenue 3 fois : la partie est déclarée nulle."
+        : "Il reste un pion contre un pion : la partie est déclarée nulle.");
     },
+    // Position en cours (null pendant une sanction)
+    positionKey: () => (pendingSanction ? null : classicKey(board, kings, currentPlayer)),
     // Identifiant du refus de capture en cours ("" s'il n'y en a pas)
     sanctionSig: () => {
       if (pendingSanction) return "p:" + pendingSanction.offender + ":" + pendingSanction.candidates.join(",");
@@ -343,7 +358,7 @@
     api: () => window.__mode2,
     ready() {
       const a = this.api();
-      return !!(a && a.suggest && a.isAi && a.isBusy && a.declareDraw);
+      return !!(a && a.suggest && a.isAi && a.isBusy && a.declareDraw && a.positionKey);
     },
     boardEl: () => $("#customBoard"),
     isAi() { return this.api().isAi(); },
@@ -378,7 +393,8 @@
       const s = this.api().get();
       return !s.gameOver && s.phase === "play" && s.chain === null && s.bonusPending === 0;
     },
-    declareDraw() { this.api().declareDraw(); },
+    declareDraw(reason) { this.api().declareDraw(reason); },
+    positionKey() { return this.api().positionKey(); },
     sanctionSig: () => "",
     snapshot() {
       const s = this.api().get();
@@ -419,22 +435,65 @@
     return actor === myOnlineColor();
   }
 
-  const isDrawEnd = A => {
-    if (!A.isOver()) return false;
+  /* =====================================================
+     Anti-répétition : la même position 3 fois = match nul
+     (positions comptées à chaque tour terminé, sur les deux appareils en ligne)
+     ===================================================== */
+  let repHistory = [];
+  let lastRepKey = "";
+  const repeatOn = () => !!window.xidataRules && window.xidataRules.repeat === "on";
+  const repCount = key => repHistory.filter(k => k === key).length;
+  window.xidataRepCount = repCount; // utilisé par l'ordinateur du Mode 2 (mode2.js)
+
+  function recordPosition(A) {
+    if (!A.ready()) return;
+    if (A.fresh()) { repHistory = []; lastRepKey = ""; } // nouvelle partie
+    const key = A.positionKey();
+    if (key === null || key === lastRepKey) return;
+    lastRepKey = key;
+    repHistory.push(key);
+  }
+
+  // Après une annulation : on oublie les positions postérieures à la position retrouvée
+  function trimRepetition(A) {
+    const key = A.positionKey();
+    const i = key === null ? -1 : repHistory.lastIndexOf(key);
+    repHistory.length = i >= 0 ? i + 1 : 0;
+    lastRepKey = key || "";
+  }
+
+  // La position en cours vient-elle d'être vue 3 fois ? (utilisé aussi par la fenêtre de fin de l'adversaire)
+  function isRepetition(A) {
+    if (!repeatOn()) return false;
+    recordPosition(A);
+    const key = A.positionKey();
+    return key !== null && repCount(key) >= 3;
+  }
+  window.xidataRepetitionDraw = () => {
+    const A = currentAdapter();
+    return A.ready() ? isRepetition(A) : false;
+  };
+
+  const isOneVsOne = A => {
     const c = A.counts();
     return c.black === 1 && c.white === 1;
   };
+  const isDrawEnd = A => A.isOver() && (isOneVsOne(A) || isRepetition(A));
 
   /* =====================================================
      Règles optionnelles (⚙️ Réglages) : pas de retour arrière
      La règle est fixée au début de chaque partie.
      En ligne, c'est la règle de celui qui crée la partie.
      ===================================================== */
-  window.xidataRules = { noBack: "off" };
+  window.xidataRules = { noBack: "off", repeat: "off" };
 
-  function ruleFor(ctx) {
-    if (ctx === "online" && window.currentRoomRules) return window.currentRoomRules.noBack || "off";
-    return (profiles[ctx] && profiles[ctx].rules.noBack) || "off";
+  function rulesFor(ctx) {
+    if (ctx === "online" && window.currentRoomRules) {
+      // En ligne : les règles de l'hôte (une salle sans réglage de répétition = désactivée)
+      return { noBack: window.currentRoomRules.noBack || "off", repeat: window.currentRoomRules.repeat || "off" };
+    }
+    const r = (profiles[ctx] && profiles[ctx].rules) || {};
+    return { noBack: r.noBack || "off", repeat: r.repeat || "on" };
   }
 
   // Mode 1 : on enveloppe les fonctions qui produisent les coups dans game.js
@@ -467,6 +526,35 @@
       if (rule() !== "all" || kingSet.has(index)) return moves;
       return moves.filter(m => !backward(player, m.from, m.to));
     };
+
+    // Ordinateur : évite de refaire une position déjà vue et varie ses coups
+    if (typeof chooseAiMove === "function" && typeof evaluateAiBoard === "function") {
+      const originalChoose = window.chooseAiMove;
+      window.chooseAiMove = function (moves) {
+        if (!moves || moves.length < 2 || window.xidataRules.repeat !== "on") return originalChoose(moves);
+        const level = aiDifficulty;
+        const blacks = board.filter(p => p === BLACK).length;
+        const whites = board.filter(p => p === WHITE).length;
+        const behind = blacks < whites; // en difficulté, une répétition (match nul) est acceptable
+        const scored = moves.map(move => {
+          const sim = simulateAiMove(board, kings, move, BLACK);
+          let score;
+          if (level === "easy") score = Math.random();
+          else if (level === "medium") score = evaluateAiBoard(sim.board, sim.kings);
+          else score = minimaxAi(sim.board, sim.kings, 2, WHITE, -Infinity, Infinity);
+          let penalty = 0;
+          if (move.capture === null && !behind) { // une capture est irréversible : jamais de répétition
+            const times = repCount(classicKey(sim.board, sim.kings, WHITE));
+            penalty = times >= 2 ? 60 : times === 1 ? 10 : 0;
+          }
+          return { move, adjusted: score - penalty };
+        });
+        const best = Math.max(...scored.map(s => s.adjusted));
+        const margin = level === "easy" ? 0 : (level === "medium" ? 6 : 4); // on varie parmi les coups presque aussi bons
+        const pool = scored.filter(s => s.adjusted >= best - margin);
+        return pool[Math.floor(Math.random() * pool.length)].move;
+      };
+    }
 
     // Coups utilisés par l'ordinateur pour réfléchir (même logique, avec la règle)
     window.getAiMovesOnBoard = function (state, kingSet, player) {
@@ -502,12 +590,13 @@
   function applyRules(A, ctx) {
     if (A.mode === "classic") installClassicRules();
     if (!A.fresh()) { ruleToastShown = false; return; } // on ne change pas les règles en cours de partie
-    const mode = ruleFor(ctx);
-    const key = A.mode + "|" + ctx + "|" + mode;
+    const r = rulesFor(ctx);
+    const mode = r.noBack;
+    const key = A.mode + "|" + ctx + "|" + r.noBack + "|" + r.repeat;
     if (key !== appliedRuleKey) {
       appliedRuleKey = key;
-      window.xidataRules = { noBack: mode };
-      if (A.mode === "custom") A.api().setRules({ noBack: mode });
+      window.xidataRules = { noBack: r.noBack, repeat: r.repeat };
+      if (A.mode === "custom") A.api().setRules({ noBack: r.noBack, repeat: r.repeat });
     }
     if (mode !== "off" && !ruleToastShown) {
       ruleToastShown = true;
@@ -567,7 +656,7 @@
 
   function announceEnd(A, ctx) {
     if (isDrawEnd(A)) {
-      announce({ text: "MATCH NUL", sub: "Un pion contre un pion", sticker: "🤝", tone: "draw" }, 3400);
+      announce({ text: "MATCH NUL", sub: isOneVsOne(A) ? "Un pion contre un pion" : "Même position 3 fois", sticker: "🤝", tone: "draw" }, 3400);
       return;
     }
     const winner = A.winner();
@@ -602,6 +691,12 @@
     if (c.black !== 1 || c.white !== 1) return;
     if (ctx === "online" && window.currentRoomRole !== "host") return; // l'hôte déclare, l'invité reçoit
     A.declareDraw();
+  }
+
+  function checkRepetition(A, ctx) {
+    if (A.isOver() || !A.canDraw() || !isRepetition(A)) return;
+    if (ctx === "online" && window.currentRoomRole !== "host") return; // l'hôte déclare, l'invité reçoit
+    A.declareDraw("repetition");
   }
 
   /* =====================================================
@@ -666,7 +761,10 @@
     // Avant chaque toucher du joueur : on mémorise la position (pour "Annuler")
     el.addEventListener("click", () => recordUndoPoint(A), true);
     // Le plateau est redessiné à chaque coup : on remet l'indice en surbrillance
-    new MutationObserver(() => applyHint(A)).observe(el, { childList: true });
+    new MutationObserver(() => {
+      applyHint(A);
+      if (A === currentAdapter()) recordPosition(A);
+    }).observe(el, { childList: true });
   }
 
   /* =====================================================
@@ -795,7 +893,9 @@
     applyRules(A, ctx); // règles optionnelles du type de partie
     if (A.fresh()) stacks[A.mode].length = 0; // nouvelle partie : plus rien à annuler
 
+    recordPosition(A);
     checkDraw(A, ctx);
+    checkRepetition(A, ctx);
     if (hint && hint.key !== A.turnKey()) hint = null;
     applyHint(A);
     checkSanction(A);
@@ -830,6 +930,7 @@
       stacks[A.mode].length = index;
       hint = null;
       A.restore(snap);
+      trimRepetition(A);
       toast("↩ Coup annulé");
     });
   }
@@ -898,6 +999,8 @@
     if (select) select.value = String(profiles[settings.tab].timer || 0);
     const ruleSelect = $("#ruleSelect");
     if (ruleSelect) ruleSelect.value = profiles[settings.tab].rules.noBack || "off";
+    const repeatSelect = $("#repeatSelect");
+    if (repeatSelect) repeatSelect.value = profiles[settings.tab].rules.repeat || "on";
     const note = $("#settingsNote");
     if (note) note.hidden = settings.tab !== "online";
   }
@@ -932,6 +1035,21 @@
       });
       ruleSelect.addEventListener("change", () => {
         profiles[settings.tab].rules.noBack = ruleSelect.value;
+        saveSettings();
+      });
+    }
+
+    const repeatSelect = $("#repeatSelect");
+    if (repeatSelect) {
+      repeatSelect.innerHTML = "";
+      REPEAT_OPTIONS.forEach(([value, label]) => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = label;
+        repeatSelect.appendChild(option);
+      });
+      repeatSelect.addEventListener("change", () => {
+        profiles[settings.tab].rules.repeat = repeatSelect.value;
         saveSettings();
       });
     }
@@ -986,10 +1104,13 @@
   // Utilisé par online.js (temps de réflexion de la salle) et pour les tests
   window.xidataSettings = {
     getTurnLimit: ctx => Number(profiles[ctx] && profiles[ctx].timer) || 0,
-    getRules: ctx => ({ noBack: (profiles[ctx] && profiles[ctx].rules.noBack) || "off" })
+    getRules: ctx => ({
+      noBack: (profiles[ctx] && profiles[ctx].rules.noBack) || "off",
+      repeat: (profiles[ctx] && profiles[ctx].rules.repeat) || "on"
+    })
   };
   window.xidataExtras = {
-    tick, coins: () => coins, total: totalCoins, setCoins, settings, profiles, stacks, announce, buyPack, toast,
+    tick, rep: { history: () => repHistory.slice(), push: k => repHistory.push(k), classicKey }, coins: () => coins, total: totalCoins, setCoins, settings, profiles, stacks, announce, buyPack, toast,
     adapters: { classic, custom }
   };
 })();
