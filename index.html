@@ -122,6 +122,10 @@
       <h3>📏 Règle : retour arrière</h3>
       <select id="ruleSelect" class="mode-select"></select>
       <p class="setting-note">Les règles s'appliquent à la prochaine partie. Un pion ne peut alors aller qu'en avant, à gauche ou à droite.</p>
+
+      <h3>🔁 Règle : répétition de position</h3>
+      <select id="repeatSelect" class="mode-select"></select>
+      <p class="setting-note">Si la même position revient 3 fois, la partie est nulle. L'ordinateur évite alors de se répéter et varie ses coups.</p>
       <p id="settingsNote" class="setting-note" hidden>En ligne, le temps choisi par celui qui crée la partie s'applique aux deux joueurs. Les couleurs restent personnelles.</p>
 
       <button id="settingsClose" class="button primary" type="button">Terminer</button>
@@ -356,6 +360,7 @@
         <p class="eyebrow">OPTIONS (⚙️ RÉGLAGES)</p>
         <ol>
           <li><strong>Pas de retour arrière :</strong> un pion ne peut plus reculer. Il va en avant, à gauche ou à droite. Au choix : seulement pour les déplacements, ou aussi pour les captures. Les Blancs avancent vers le haut du plateau, les Noirs vers le bas. Au Mode 1, un roi reste libre de ses mouvements.</li>
+          <li><strong>Répétition de position :</strong> si la même position revient 3 fois, la partie est déclarée nulle. Personne n'est obligé de changer de pion si son déplacement est nécessaire. L'ordinateur préfère les autres coups lorsqu'ils sont aussi intéressants.</li>
         </ol>
       </section>
 
