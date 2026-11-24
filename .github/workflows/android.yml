@@ -31,7 +31,7 @@ jobs:
           missing=""
           [ -n "$FIREBASE_SERVICE_ACCOUNT" ] || missing="$missing FIREBASE_SERVICE_ACCOUNT"
           [ -n "$STRIPE_SECRET_KEY" ]        || missing="$missing STRIPE_SECRET_KEY"
-          [ -n "$STRIPE_WEBHOOK_SECRET" ]    || missing="$missing STRIPE_WEBHOOK_SECRET"
+          
           [ -n "$SITE_URL" ]                 || missing="$missing SITE_URL"
           if [ -n "$missing" ]; then
             echo "::error::Secrets introuvables :$missing (Settings > Secrets and variables > Actions)"
