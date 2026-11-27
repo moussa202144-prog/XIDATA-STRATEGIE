@@ -58,7 +58,7 @@
   ];
 
   const REPEAT_OPTIONS = [
-    ["on", "3 répétitions = match nul"],
+    ["on", "Pion immobilisé s'il répète le même mouvement"],
     ["off", "Désactivée"]
   ];
 
@@ -249,11 +249,6 @@
      Adaptateurs : un par mode de jeu
      ===================================================== */
 
-  // Identifiant d'une position (Mode 1) : pions, rois et camp qui doit jouer
-  const classicKey = (boardArr, kingSet, side) =>
-    "m1|" + side + "|" + boardArr.map(p => (p ? p[0] : ".")).join("") + "|" +
-    [...kingSet].sort((a, b) => a - b).join(",");
-
   // ----- Mode 1 : Classique (variables et fonctions de game.js) -----
   const classic = {
     mode: "classic",
@@ -283,19 +278,19 @@
       white: board.filter(p => p === WHITE).length
     }),
     canDraw: () => !gameOver && !pendingSanction,
-    declareDraw: reason => {
-      const rep = reason === "repetition";
+    declareDraw: () => {
       gameOver = true;
       selected = null;
-      setStatus(rep ? "Match nul : la même position est revenue 3 fois." : "Match nul : il reste un pion de chaque côté.");
+      setStatus("Match nul : il reste un pion de chaque côté.");
       render();
       if (typeof saveOnlineState === "function") saveOnlineState();
-      showEnd("Match nul", rep
-        ? "La même position est revenue 3 fois : la partie est déclarée nulle."
-        : "Il reste un pion contre un pion : la partie est déclarée nulle.");
+      showEnd("Match nul", "Il reste un pion contre un pion : la partie est déclarée nulle.");
     },
-    // Position en cours (null pendant une sanction)
-    positionKey: () => (pendingSanction ? null : classicKey(board, kings, currentPlayer)),
+    // Suivi des mouvements (pion immobilisé)
+    boardCopy: () => board.slice(),
+    motionStable: () => !pendingSanction,
+    pieceCount: color => board.filter(p => p === color).length,
+    canOthersMove: (color, except) => !!classicMobility && classicMobility(board, kings, color, except),
     // Identifiant du refus de capture en cours ("" s'il n'y en a pas)
     sanctionSig: () => {
       if (pendingSanction) return "p:" + pendingSanction.offender + ":" + pendingSanction.candidates.join(",");
@@ -358,7 +353,7 @@
     api: () => window.__mode2,
     ready() {
       const a = this.api();
-      return !!(a && a.suggest && a.isAi && a.isBusy && a.declareDraw && a.positionKey);
+      return !!(a && a.suggest && a.isAi && a.isBusy && a.declareDraw && a.setFrozen && a.othersCanMove);
     },
     boardEl: () => $("#customBoard"),
     isAi() { return this.api().isAi(); },
@@ -393,8 +388,15 @@
       const s = this.api().get();
       return !s.gameOver && s.phase === "play" && s.chain === null && s.bonusPending === 0;
     },
-    declareDraw(reason) { this.api().declareDraw(reason); },
-    positionKey() { return this.api().positionKey(); },
+    declareDraw() { this.api().declareDraw(); },
+    // Suivi des mouvements (pion immobilisé)
+    boardCopy() { return this.api().get().board.slice(); },
+    motionStable() {
+      const s = this.api().get();
+      return s.phase === "play" && s.chain === null && s.bonusPending === 0 && !s.gameOver;
+    },
+    pieceCount(color) { return this.api().get().board.filter(p => p === color).length; },
+    canOthersMove(color, except) { return this.api().othersCanMove(color, except); },
     sanctionSig: () => "",
     snapshot() {
       const s = this.api().get();
@@ -436,49 +438,133 @@
   }
 
   /* =====================================================
-     Anti-répétition : la même position 3 fois = match nul
-     (positions comptées à chaque tour terminé, sur les deux appareils en ligne)
+     Anti-répétition : un pion qui répète le même mouvement est immobilisé
+     - il reste sur le plateau mais ne peut plus bouger (ni capturer)
+     - son propriétaire continue avec ses autres pions
+     - jamais s'il ne lui reste qu'un pion, ni si ses autres pions sont déjà immobiles ou bloqués
+     - aucun match nul à cause de la répétition
      ===================================================== */
-  let repHistory = [];
-  let lastRepKey = "";
+  const FREEZE_AFTER = 4; // coups consécutifs d'un même pion qui fait la navette entre 2 cases
+  const newTracker = () => ({ prev: null, trail: { white: [], black: [] }, frozen: new Set(), owner: {} });
+  const trackers = { classic: newTracker(), custom: newTracker() };
+  window.xidataFrozen = trackers.classic.frozen; // lu par les coups de game.js (Mode 1)
+  let classicMobility = null;
+
   const repeatOn = () => !!window.xidataRules && window.xidataRules.repeat === "on";
-  const repCount = key => repHistory.filter(k => k === key).length;
-  window.xidataRepCount = repCount; // utilisé par l'ordinateur du Mode 2 (mode2.js)
 
-  function recordPosition(A) {
+  // Nombre d'allers-retours déjà faits si ce coup continue la navette (utilisé par l'ordinateur)
+  function shuttleTimesFor(mode, side, from, to) {
+    const t = trackers[mode].trail[side];
+    return t.length >= 2 && t[t.length - 1] === from && t[t.length - 2] === to ? t.length - 2 : 0;
+  }
+  window.xidataShuttleTimes = (side, from, to) => shuttleTimesFor(currentAdapter().mode, side, from, to);
+
+  const isShuttle = cells =>
+    cells.length >= 3 && cells[0] !== cells[1] && cells.every((c, i) => i < 2 || c === cells[i - 2]);
+
+  function syncFrozen(A) {
+    if (A.mode === "custom" && A.ready()) A.api().setFrozen([...trackers.custom.frozen]);
+  }
+  function resetMotion(A) {
+    const tr = trackers[A.mode];
+    tr.prev = null;
+    tr.trail = { white: [], black: [] };
+    tr.frozen.clear();
+    tr.owner = {};
+    syncFrozen(A);
+  }
+  const sameBoard = (a, b) => a.every((v, i) => v === b[i]);
+  const countOf = (b, color) => b.filter(p => p === color).length;
+
+  function tryFreeze(A, tr, color, index) {
+    if (tr.frozen.has(index)) return;
+    if (A.pieceCount(color) < 2) return;          // exception 1 : un seul pion
+    if (!A.canOthersMove(color, index)) return;   // exception 2 : les autres pions sont immobiles ou bloqués
+    tr.frozen.add(index);
+    tr.owner[index] = color;
+    tr.trail[color] = [];
+    syncFrozen(A);
+    announce({ text: "IMMOBILISÉ !", sub: "Ce pion répète le même coup : il ne bouge plus", sticker: "🧊", tone: "freeze" }, 3000);
+    if (typeof window.xidataPlaySound === "function") window.xidataPlaySound("freeze");
+  }
+
+  // Observe chaque position stable : repère le pion qui a bougé et la navette entre deux cases
+  function recordMotion(A) {
     if (!A.ready()) return;
-    if (A.fresh()) { repHistory = []; lastRepKey = ""; } // nouvelle partie
-    const key = A.positionKey();
-    if (key === null || key === lastRepKey) return;
-    lastRepKey = key;
-    repHistory.push(key);
+    const tr = trackers[A.mode];
+    if (!repeatOn()) { if (tr.frozen.size || tr.prev) resetMotion(A); return; }
+    if (A.fresh()) { // nouvelle partie
+      resetMotion(A);
+      if (A.motionStable()) tr.prev = A.boardCopy();
+      return;
+    }
+    if (!A.motionStable()) return;
+
+    const cur = A.boardCopy();
+    if (!tr.prev) { tr.prev = cur; return; }
+    if (sameBoard(tr.prev, cur)) return;
+    const prev = tr.prev;
+    tr.prev = cur;
+
+    const vacated = [];
+    const arrived = [];
+    for (let i = 0; i < 25; i++) {
+      if (prev[i] === cur[i]) continue;
+      if (cur[i] === null) vacated.push(i); else arrived.push(i);
+    }
+    const simple =
+      vacated.length === 1 && arrived.length === 1 && prev[vacated[0]] === cur[arrived[0]] &&
+      countOf(prev, WHITE) === countOf(cur, WHITE) && countOf(prev, BLACK) === countOf(cur, BLACK);
+
+    // un pion immobilisé qui a disparu (capturé) n'est plus suivi
+    tr.frozen.forEach(i => { if (cur[i] !== tr.owner[i]) { tr.frozen.delete(i); delete tr.owner[i]; } });
+
+    if (!simple) { // capture ou retrait : irréversible, on repart de zéro
+      tr.trail = { white: [], black: [] };
+      syncFrozen(A);
+      return;
+    }
+
+    const color = cur[arrived[0]];
+    const from = vacated[0];
+    const to = arrived[0];
+    const trail = tr.trail[color];
+    if (trail.length && trail[trail.length - 1] === from) trail.push(to);
+    else tr.trail[color] = [from, to]; // un autre pion a bougé : nouvelle série
+    const t = tr.trail[color];
+    if (t.length > FREEZE_AFTER + 1) t.splice(0, t.length - (FREEZE_AFTER + 1));
+    if (t.length === FREEZE_AFTER + 1 && isShuttle(t)) tryFreeze(A, tr, color, to);
+    syncFrozen(A);
   }
 
-  // Après une annulation : on oublie les positions postérieures à la position retrouvée
-  function trimRepetition(A) {
-    const key = A.positionKey();
-    const i = key === null ? -1 : repHistory.lastIndexOf(key);
-    repHistory.length = i >= 0 ? i + 1 : 0;
-    lastRepKey = key || "";
-  }
-
-  // La position en cours vient-elle d'être vue 3 fois ? (utilisé aussi par la fenêtre de fin de l'adversaire)
-  function isRepetition(A) {
-    if (!repeatOn()) return false;
-    recordPosition(A);
-    const key = A.positionKey();
-    return key !== null && repCount(key) >= 3;
-  }
-  window.xidataRepetitionDraw = () => {
-    const A = currentAdapter();
-    return A.ready() ? isRepetition(A) : false;
+  // Annuler : on retrouve aussi les pions immobilisés et les séries de cette époque
+  const snapshotMotion = A => {
+    const tr = trackers[A.mode];
+    return {
+      frozen: [...tr.frozen],
+      owner: { ...tr.owner },
+      trail: { white: tr.trail.white.slice(), black: tr.trail.black.slice() }
+    };
   };
+  function restoreMotion(A, motion) {
+    const tr = trackers[A.mode];
+    tr.frozen.clear();
+    tr.owner = {};
+    tr.trail = { white: [], black: [] };
+    if (motion) {
+      motion.frozen.forEach(i => tr.frozen.add(i));
+      tr.owner = { ...motion.owner };
+      tr.trail = { white: motion.trail.white.slice(), black: motion.trail.black.slice() };
+    }
+    tr.prev = A.motionStable() ? A.boardCopy() : null;
+    syncFrozen(A);
+  }
 
   const isOneVsOne = A => {
     const c = A.counts();
     return c.black === 1 && c.white === 1;
   };
-  const isDrawEnd = A => A.isOver() && (isOneVsOne(A) || isRepetition(A));
+  const isDrawEnd = A => A.isOver() && isOneVsOne(A);
 
   /* =====================================================
      Règles optionnelles (⚙️ Réglages) : pas de retour arrière
@@ -489,9 +575,10 @@
 
   function rulesFor(ctx) {
     if (ctx === "online" && window.currentRoomRules) {
-      // En ligne : les règles de l'hôte (une salle sans réglage de répétition = désactivée)
-      return { noBack: window.currentRoomRules.noBack || "off", repeat: window.currentRoomRules.repeat || "off" };
+      // En ligne : les règles de l'hôte. Le pion immobilisé n'existe pas (encore) en ligne.
+      return { noBack: window.currentRoomRules.noBack || "off", repeat: "off" };
     }
+    if (ctx === "online") return { noBack: (profiles.online.rules.noBack) || "off", repeat: "off" };
     const r = (profiles[ctx] && profiles[ctx].rules) || {};
     return { noBack: r.noBack || "off", repeat: r.repeat || "on" };
   }
@@ -505,6 +592,8 @@
     classicRulesInstalled = true;
 
     const rule = () => window.xidataRules.noBack || "off";
+    const freezeOn = () => window.xidataRules.repeat === "on";
+    const tracker = trackers.classic;
     // Les Blancs avancent vers le haut du plateau, les Noirs vers le bas
     const backward = (player, from, to) => {
       const dr = rowOf(to) - rowOf(from);
@@ -512,30 +601,69 @@
     };
 
     const originalGetMoves = window.getMoves;
+    const originalCapture = window.captureMovesOnBoard;
+
+    // Coups d'un pion sur un plateau donné (règle du retour arrière appliquée, immobilisation non appliquée)
+    function stateMoves(state, kingSet, index, player) {
+      const mode = rule();
+      const king = kingSet.has(index);
+      const moves = [];
+      for (const [dr, dc] of directions(index)) {
+        let r = rowOf(index) + dr;
+        let c = colOf(index) + dc;
+        while (inside(r, c) && state[r * SIZE + c] === EMPTY) {
+          const to = r * SIZE + c;
+          if (!(mode !== "off" && !king && backward(player, index, to))) {
+            moves.push({ from: index, to, capture: null, captures: [] });
+          }
+          if (!king) break;
+          r += dr;
+          c += dc;
+        }
+      }
+      let caps = originalCapture(state, kingSet, index, player);
+      if (mode === "all" && !king) caps = caps.filter(m => !backward(player, m.from, m.to));
+      caps.forEach(m => moves.push({ from: index, to: m.to, capture: m.capture, captures: [m.capture] }));
+      return moves;
+    }
+
+    // Le propriétaire a-t-il un autre pion (non immobilisé) capable de jouer ?
+    function movableOthers(state, kingSet, player, except) {
+      for (let j = 0; j < 25; j++) {
+        if (j === except || state[j] !== player || tracker.frozen.has(j)) continue;
+        if (stateMoves(state, kingSet, j, player).length) return true;
+      }
+      return false;
+    }
+    classicMobility = movableOthers;
+
+    // Un pion immobilisé ne bouge plus, tant que son propriétaire a un autre pion capable de jouer
+    const blocked = (state, kingSet, index, player) =>
+      freezeOn() && tracker.owner[index] === player && tracker.frozen.has(index) &&
+      movableOthers(state, kingSet, player, index);
+
     window.getMoves = function (index) {
+      const player = board[index];
+      if (player && blocked(board, kings, index, player)) return [];
       const moves = originalGetMoves(index);
       const mode = rule();
       if (mode === "off" || kings.has(index)) return moves;
-      const player = board[index];
       return moves.filter(m => !((m.capture === null || mode === "all") && backward(player, m.from, m.to)));
     };
 
-    const originalCapture = window.captureMovesOnBoard;
     window.captureMovesOnBoard = function (state, kingSet, index, player) {
+      if (blocked(state, kingSet, index, player)) return [];
       const moves = originalCapture(state, kingSet, index, player);
       if (rule() !== "all" || kingSet.has(index)) return moves;
       return moves.filter(m => !backward(player, m.from, m.to));
     };
 
-    // Ordinateur : évite de refaire une position déjà vue et varie ses coups
+    // Ordinateur : évite de faire la navette (pour ne pas être immobilisé) et varie ses coups
     if (typeof chooseAiMove === "function" && typeof evaluateAiBoard === "function") {
       const originalChoose = window.chooseAiMove;
       window.chooseAiMove = function (moves) {
-        if (!moves || moves.length < 2 || window.xidataRules.repeat !== "on") return originalChoose(moves);
+        if (!moves || moves.length < 2 || !freezeOn()) return originalChoose(moves);
         const level = aiDifficulty;
-        const blacks = board.filter(p => p === BLACK).length;
-        const whites = board.filter(p => p === WHITE).length;
-        const behind = blacks < whites; // en difficulté, une répétition (match nul) est acceptable
         const scored = moves.map(move => {
           const sim = simulateAiMove(board, kings, move, BLACK);
           let score;
@@ -543,8 +671,8 @@
           else if (level === "medium") score = evaluateAiBoard(sim.board, sim.kings);
           else score = minimaxAi(sim.board, sim.kings, 2, WHITE, -Infinity, Infinity);
           let penalty = 0;
-          if (move.capture === null && !behind) { // une capture est irréversible : jamais de répétition
-            const times = repCount(classicKey(sim.board, sim.kings, WHITE));
+          if (move.capture === null) { // une capture est irréversible : jamais de navette
+            const times = shuttleTimesFor("classic", BLACK, move.from, move.to);
             penalty = times >= 2 ? 60 : times === 1 ? 10 : 0;
           }
           return { move, adjusted: score - penalty };
@@ -556,29 +684,12 @@
       };
     }
 
-    // Coups utilisés par l'ordinateur pour réfléchir (même logique, avec la règle)
+    // Coups utilisés par l'ordinateur pour réfléchir (mêmes règles)
     window.getAiMovesOnBoard = function (state, kingSet, player) {
-      const mode = rule();
       const moves = [];
       state.forEach((piece, index) => {
-        if (piece !== player) return;
-        const king = kingSet.has(index);
-        for (const [dr, dc] of directions(index)) {
-          let r = rowOf(index) + dr;
-          let c = colOf(index) + dc;
-          while (inside(r, c) && state[r * SIZE + c] === EMPTY) {
-            const to = r * SIZE + c;
-            if (!(mode !== "off" && !king && backward(player, index, to))) {
-              moves.push({ from: index, to, capture: null, captures: [] });
-            }
-            if (!king) break;
-            r += dr;
-            c += dc;
-          }
-        }
-        for (const m of window.captureMovesOnBoard(state, kingSet, index, player)) {
-          moves.push({ from: index, to: m.to, capture: m.capture, captures: [m.capture] });
-        }
+        if (piece !== player || blocked(state, kingSet, index, player)) return;
+        stateMoves(state, kingSet, index, player).forEach(m => moves.push(m));
       });
       const capturesOnly = moves.filter(m => m.capture !== null);
       return capturesOnly.length ? capturesOnly : moves;
@@ -656,7 +767,7 @@
 
   function announceEnd(A, ctx) {
     if (isDrawEnd(A)) {
-      announce({ text: "MATCH NUL", sub: isOneVsOne(A) ? "Un pion contre un pion" : "Même position 3 fois", sticker: "🤝", tone: "draw" }, 3400);
+      announce({ text: "MATCH NUL", sub: "Un pion contre un pion", sticker: "🤝", tone: "draw" }, 3400);
       return;
     }
     const winner = A.winner();
@@ -693,12 +804,6 @@
     A.declareDraw();
   }
 
-  function checkRepetition(A, ctx) {
-    if (A.isOver() || !A.canDraw() || !isRepetition(A)) return;
-    if (ctx === "online" && window.currentRoomRole !== "host") return; // l'hôte déclare, l'invité reçoit
-    A.declareDraw("repetition");
-  }
-
   /* =====================================================
      Jouer un coup en simulant les touchers sur le plateau
      ===================================================== */
@@ -720,7 +825,7 @@
     const json = JSON.stringify(snap);
     const stack = stacks[A.mode];
     const top = stack[stack.length - 1];
-    if (!top || top.json !== json) stack.push({ json, snap });
+    if (!top || top.json !== json) stack.push({ json, snap, motion: snapshotMotion(A) });
   }
 
   // Dernier point de retour différent de la position actuelle (-1 si aucun)
@@ -741,9 +846,11 @@
   function applyHint(A) {
     const el = A.boardEl();
     if (!el) return;
+    const marked = repeatOn() ? trackers[A.mode].frozen : null;
     Array.from(el.children).forEach((cell, i) => {
       cell.classList.toggle("hint-from", !!hint && hint.from === i);
       cell.classList.toggle("hint-to", !!hint && hint.to === i);
+      cell.classList.toggle("frozen", !!marked && marked.has(i)); // pion immobilisé
     });
   }
 
@@ -762,8 +869,8 @@
     el.addEventListener("click", () => recordUndoPoint(A), true);
     // Le plateau est redessiné à chaque coup : on remet l'indice en surbrillance
     new MutationObserver(() => {
+      if (A === currentAdapter()) recordMotion(A);
       applyHint(A);
-      if (A === currentAdapter()) recordPosition(A);
     }).observe(el, { childList: true });
   }
 
@@ -893,9 +1000,8 @@
     applyRules(A, ctx); // règles optionnelles du type de partie
     if (A.fresh()) stacks[A.mode].length = 0; // nouvelle partie : plus rien à annuler
 
-    recordPosition(A);
+    recordMotion(A);
     checkDraw(A, ctx);
-    checkRepetition(A, ctx);
     if (hint && hint.key !== A.turnKey()) hint = null;
     applyHint(A);
     checkSanction(A);
@@ -926,11 +1032,12 @@
     const index = undoTarget(A);
     if (index < 0) { toast("Rien à annuler."); return; }
     const snap = stacks[A.mode][index].snap;
+    const motion = stacks[A.mode][index].motion;
     charge(COST.undo, () => {
       stacks[A.mode].length = index;
       hint = null;
       A.restore(snap);
-      trimRepetition(A);
+      restoreMotion(A, motion);
       toast("↩ Coup annulé");
     });
   }
@@ -1110,7 +1217,7 @@
     })
   };
   window.xidataExtras = {
-    tick, rep: { history: () => repHistory.slice(), push: k => repHistory.push(k), classicKey }, coins: () => coins, total: totalCoins, setCoins, settings, profiles, stacks, announce, buyPack, toast,
+    tick, motion: { trackers, FREEZE_AFTER, shuttleTimesFor }, coins: () => coins, total: totalCoins, setCoins, settings, profiles, stacks, announce, buyPack, toast,
     adapters: { classic, custom }
   };
 })();
