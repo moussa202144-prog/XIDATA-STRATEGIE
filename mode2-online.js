@@ -97,14 +97,10 @@
         if (modal.classList.contains("hidden")) {
           const oneVsOne =
             s.board.filter(x => x === B).length === 1 && s.board.filter(x => x === W).length === 1;
-          const repeated =
-            !oneVsOne && typeof window.xidataRepetitionDraw === "function" && window.xidataRepetitionDraw();
-          $("#customEndTitle").textContent = oneVsOne || repeated ? "Match nul" : `${nameOf(s.turn)} gagnent !`;
-          $("#customEndMessage").textContent = repeated
-            ? "La même position est revenue 3 fois : la partie est déclarée nulle."
-            : oneVsOne
-              ? "Il reste un pion contre un pion : la partie est déclarée nulle."
-              : "Partie terminée.";
+          $("#customEndTitle").textContent = oneVsOne ? "Match nul" : `${nameOf(s.turn)} gagnent !`;
+          $("#customEndMessage").textContent = oneVsOne
+            ? "Il reste un pion contre un pion : la partie est déclarée nulle."
+            : "Partie terminée.";
           modal.classList.remove("hidden");
         }
       } else {
