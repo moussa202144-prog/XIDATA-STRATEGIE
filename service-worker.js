@@ -3,7 +3,7 @@
 // Hors ligne : les fichiers déjà mémorisés prennent le relais.
 
 // Change ce numéro à chaque grosse mise à jour (l'ancien cache est supprimé)
-const CACHE_NAME = "xidata-strategie-v9";
+const CACHE_NAME = "xidata-strategie-v10";
 
 // Fichiers mémorisés dès l'installation (un fichier absent n'empêche pas l'installation)
 const CORE_FILES = [
