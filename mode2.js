@@ -16,14 +16,19 @@ let bonusOpponent = null;
   // Option : un pion ne peut plus reculer ("off" = désactivée, "moves" = déplacements, "all" = déplacements et captures)
   // Les Blancs avancent vers le haut du plateau, les Noirs vers le bas.
   let backRule='off';
-  // Option : anti-répétition (la même position 3 fois = match nul ; l'ordinateur évite de se répéter)
+  // Option : pion immobilisé quand il répète le même mouvement (le suivi est fait par extras.js)
+  // et l'ordinateur évite de se répéter pour ne pas être immobilisé.
   let repeatRule='off';
-  const posKey=(b,nextTurn)=>'c|'+nextTurn+'|'+b.map(p=>p?p[0]:'.').join('');
-  // Combien de fois la position obtenue après le coup m (joué par "side") a déjà été vue
+  const frozen=new Set();
+  // Un pion immobilisé ne bouge plus, tant que son propriétaire a un autre pion capable de jouer
+  function ownerHasOtherMoves(p,except){
+    for(let j=0;j<25;j++){if(j===except||board[j]!==p||frozen.has(j))continue;if(rawMoves(j).length)return true;}
+    return false;
+  }
+  // Nombre d'allers-retours déjà faits par ce pion si ce coup continue la navette (0 sinon)
   function repeatTimes(m,side){
-    if(m.cap!==null||repeatRule!=='on'||typeof window.xidataRepCount!=='function')return 0;
-    const sim=board.slice();sim[m.to]=side;sim[m.from]=E;
-    return window.xidataRepCount(posKey(sim,other(side)));
+    if(m.cap!==null||repeatRule!=='on'||typeof window.xidataShuttleTimes!=='function')return 0;
+    return window.xidataShuttleTimes(side,m.from,m.to);
   }
   function restrict(p,out){
     if(backRule==='off')return out;
@@ -45,7 +50,12 @@ if (bonusTimerInterval) {
 bonusPlayer = null;
 bonusOpponent = null;
   gameOver=false; aiBusy=false; captures={[B]:0,[W]:0}; lastMove=null; openingMovePending=true; modal.classList.add('hidden'); $('#bonusPanel')?.classList.add('hidden'); $('#chainPanel')?.classList.add('hidden'); say(`Placement : les ${name(placing)} posent leur premier pion. La case centrale reste vide.`); render();if(aiMode&&placing===B)scheduleAI();}
-  function movesFrom(i){const p=board[i];if(p!==B&&p!==W)return [];let out=[];for(const [dr,dc] of dirs){let r=row(i)+dr,c=col(i)+dc;if(!inside(r,c))continue;let j=r*N+c;if(board[j]===E)out.push({from:i,to:j,cap:null});else if(board[j]===other(p)){let rr=r+dr,cc=c+dc;if(inside(rr,cc)&&board[rr*N+cc]===E)out.push({from:i,to:rr*N+cc,cap:j});}}return restrict(p,out);}
+  function rawMoves(i){const p=board[i];if(p!==B&&p!==W)return [];let out=[];for(const [dr,dc] of dirs){let r=row(i)+dr,c=col(i)+dc;if(!inside(r,c))continue;let j=r*N+c;if(board[j]===E)out.push({from:i,to:j,cap:null});else if(board[j]===other(p)){let rr=r+dr,cc=c+dc;if(inside(rr,cc)&&board[rr*N+cc]===E)out.push({from:i,to:rr*N+cc,cap:j});}}return restrict(p,out);}
+  function movesFrom(i){
+    const p=board[i];
+    if(repeatRule==='on'&&p&&frozen.has(i)&&ownerHasOtherMoves(p,i))return [];
+    return rawMoves(i);
+  }
   function allMoves(p){let a=[];board.forEach((v,i)=>{if(v===p)a.push(...movesFrom(i));});return a;}
   function availableMoves(i){const moves=movesFrom(i);return openingMovePending&&phase==='play'&&board[i]===turn?moves.filter(m=>m.to===center):moves;}
   function hasCenterOpeningMove(p=turn){return allMoves(p).some(m=>m.to===center);}
@@ -586,11 +596,8 @@ for (const [dr, dc] of dirs) {
     score += mobility * 2;
 
     // 5. Anti-répétition : on évite de refaire une position déjà vue (sauf si l'ordinateur est en difficulté)
-    const behind = board.filter(x => x === B).length < board.filter(x => x === W).length;
-    if (!behind) {
-      const times = repeatTimes(m, B);
-      score -= times >= 2 ? 60 : times === 1 ? 10 : 0;
-    }
+    const times = repeatTimes(m, B);
+    score -= times >= 2 ? 60 : times === 1 ? 10 : 0;
 
     // 6. Variation pour diversifier les coups proches
     score += Math.random() * (repeatRule === 'on' ? 3 : 0.1);
@@ -635,20 +642,21 @@ for (const [dr, dc] of dirs) {
     },
     setRules: r => { backRule = (r && r.noBack) || 'off'; repeatRule = (r && r.repeat) === 'on' ? 'on' : 'off'; },
     getRules: () => ({ noBack: backRule, repeat: repeatRule }),
-    // Position en cours (null pendant le placement, une chaîne de captures ou un retrait bonus)
-    positionKey: () => (phase === 'play' && chain === null && bonusPending === 0 ? posKey(board, turn) : null),
+    // Pions immobilisés (liste d'indices) et test "le propriétaire a-t-il un autre pion mobile ?"
+    setFrozen: list => { frozen.clear(); (list || []).forEach(i => frozen.add(i)); },
+    getFrozen: () => Array.from(frozen),
+    othersCanMove: (color, except) => ownerHasOtherMoves(color, except),
     isAi: () => !!aiMode,
     isBusy: () => !!aiBusy,
     // Un pion contre un pion : match nul
-    declareDraw: reason => {
+    declareDraw: () => {
       if (gameOver) return;
-      const rep = reason === 'repetition';
       gameOver = true;
       selected = null;
-      say(rep ? 'Match nul : la même position est revenue 3 fois.' : 'Match nul : il reste un pion de chaque côté.');
+      say('Match nul : il reste un pion de chaque côté.');
       render();
       modalTitle.textContent = 'Match nul';
-      modalMsg.textContent = rep ? 'La même position est revenue 3 fois : la partie est déclarée nulle.' : 'Il reste un pion contre un pion : la partie est déclarée nulle.';
+      modalMsg.textContent = 'Il reste un pion contre un pion : la partie est déclarée nulle.';
       modal.classList.remove('hidden');
     },
     // Meilleur coup conseillé pour la couleur "color" : {to} (placement ou retrait), {from, to} (déplacement)
