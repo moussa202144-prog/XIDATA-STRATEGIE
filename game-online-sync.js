@@ -120,15 +120,9 @@ function startOnlineGame() {
       if (endModal.classList.contains("hidden")) {
         const oneVsOne =
           board.filter(p => p === BLACK).length === 1 && board.filter(p => p === WHITE).length === 1;
-        const repeated =
-          !oneVsOne && typeof window.xidataRepetitionDraw === "function" && window.xidataRepetitionDraw();
         showEnd(
-          oneVsOne || repeated ? "Match nul" : `${playerName(currentPlayer)} gagnent !`,
-          repeated
-            ? "La même position est revenue 3 fois : la partie est déclarée nulle."
-            : oneVsOne
-              ? "Il reste un pion contre un pion : la partie est déclarée nulle."
-              : "Partie terminée."
+          oneVsOne ? "Match nul" : `${playerName(currentPlayer)} gagnent !`,
+          oneVsOne ? "Il reste un pion contre un pion : la partie est déclarée nulle." : "Partie terminée."
         );
       }
     } else {
